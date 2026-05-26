@@ -154,12 +154,12 @@
     if (state.synth) {
       state.synth.dispose();
     }
-    state.synth = new Tone.PolySynth(Tone.FMSynth, {
+    state.synth = new Tone.PolySynth(Tone.Synth, {
       maxPolyphony: 64,
-      voice: Tone.FMSynth,
+      voice: Tone.Synth,
       options: {
-        modulationIndex: 2,
-        envelope: { attack: 0.01, decay: 0.2, sustain: 0.3, release: 0.4 },
+        oscillator: { type: "triangle8" },
+        envelope: { attack: 0.005, decay: 1.0, sustain: 0.1, release: 1.5 },
         volume: -12,
       }
     }).toDestination();
