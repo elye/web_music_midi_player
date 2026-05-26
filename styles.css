@@ -1,0 +1,529 @@
+/* ============================================================
+   CSS RESET & CUSTOM PROPERTIES
+   ============================================================ */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+:root {
+  --bg-primary: #0d0d0f;
+  --bg-secondary: #1a1a2e;
+  --bg-tertiary: #16213e;
+  --accent: #4cc9f0;
+  --accent-secondary: #f72585;
+  --text-primary: #e0e0e0;
+  --text-muted: #6c757d;
+  --border: #2a2a3e;
+
+  /* Type scale 1.125 */
+  --fs-xs: 0.79rem;
+  --fs-sm: 0.889rem;
+  --fs-base: 1rem;
+  --fs-md: 1.125rem;
+  --fs-lg: 1.266rem;
+  --fs-xl: 1.424rem;
+
+  /* Spacing (8px grid) */
+  --sp-1: 4px;
+  --sp-2: 8px;
+  --sp-3: 12px;
+  --sp-4: 16px;
+  --sp-5: 24px;
+  --sp-6: 32px;
+  --sp-7: 40px;
+  --sp-8: 48px;
+
+  /* Radii */
+  --r-sm: 2px;
+  --r-md: 4px;
+  --r-lg: 6px;
+
+  /* Transitions */
+  --transition: 150ms ease;
+
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  font-size: 14px;
+  color: var(--text-primary);
+  background: var(--bg-primary);
+}
+
+html, body {
+  height: 100%;
+  overflow: hidden;
+}
+
+body {
+  display: flex;
+  flex-direction: column;
+}
+
+/* ============================================================
+   SCROLLBAR
+   ============================================================ */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: var(--bg-primary); }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--text-muted); }
+
+/* ============================================================
+   BUTTONS & INPUTS
+   ============================================================ */
+button {
+  font-family: inherit;
+  font-size: var(--fs-sm);
+  font-weight: 500;
+  border: 1px solid var(--border);
+  background: var(--bg-tertiary);
+  color: var(--text-primary);
+  border-radius: var(--r-md);
+  padding: var(--sp-2) var(--sp-3);
+  cursor: pointer;
+  transition: background var(--transition), border-color var(--transition), transform var(--transition), box-shadow var(--transition);
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-1);
+  white-space: nowrap;
+}
+
+button:hover:not(:disabled) {
+  background: var(--bg-secondary);
+  border-color: var(--accent);
+}
+
+button:active:not(:disabled) {
+  transform: scale(0.97);
+}
+
+button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+button:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+button.primary {
+  background: var(--accent);
+  color: var(--bg-primary);
+  border-color: var(--accent);
+  font-weight: 600;
+}
+
+button.primary:hover:not(:disabled) {
+  background: #3ab8df;
+  border-color: #3ab8df;
+}
+
+input[type="number"], select {
+  font-family: inherit;
+  font-size: var(--fs-sm);
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  padding: var(--sp-1) var(--sp-2);
+  transition: border-color var(--transition);
+  width: 70px;
+}
+
+input[type="number"]:focus, select:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+
+input[type="range"] {
+  -webkit-appearance: none;
+  appearance: none;
+  height: 4px;
+  background: var(--border);
+  border-radius: 2px;
+  cursor: pointer;
+}
+
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 14px;
+  height: 14px;
+  background: var(--accent);
+  border-radius: 50%;
+  cursor: pointer;
+  transition: transform var(--transition);
+}
+
+input[type="range"]::-webkit-slider-thumb:hover {
+  transform: scale(1.2);
+}
+
+input[type="range"]:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* ============================================================
+   HEADER / CONTROL BAR
+   ============================================================ */
+#header {
+  background: var(--bg-secondary);
+  border-bottom: 1px solid var(--border);
+  padding: var(--sp-2) var(--sp-4);
+  display: flex;
+  align-items: center;
+  gap: var(--sp-5);
+  flex-shrink: 0;
+  backdrop-filter: blur(10px);
+  z-index: 10;
+}
+
+.control-group {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+}
+
+.control-group-label {
+  font-size: var(--fs-xs);
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-right: var(--sp-1);
+}
+
+.separator {
+  width: 1px;
+  height: 24px;
+  background: var(--border);
+}
+
+#time-display {
+  font-variant-numeric: tabular-nums;
+  font-size: var(--fs-sm);
+  color: var(--text-muted);
+  min-width: 140px;
+  text-align: right;
+}
+
+#time-display .current-time {
+  color: var(--text-primary);
+  font-weight: 600;
+}
+
+/* Transport buttons */
+.transport-btn {
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+}
+
+.transport-btn.play-btn {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--bg-primary);
+  width: 36px;
+  height: 36px;
+}
+
+.transport-btn.play-btn:hover:not(:disabled) {
+  background: #3ab8df;
+  border-color: #3ab8df;
+}
+
+#transpose-select {
+  width: 160px;
+}
+
+/* ============================================================
+   SEEK BAR
+   ============================================================ */
+#seek-bar-container {
+  height: 28px;
+  background: var(--bg-secondary);
+  border-bottom: 1px solid var(--border);
+  position: relative;
+  cursor: pointer;
+  flex-shrink: 0;
+  overflow: hidden;
+}
+
+#seek-density-canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+#seek-progress {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  width: 0%;
+  background: linear-gradient(90deg, rgba(76, 201, 240, 0.15), rgba(76, 201, 240, 0.05));
+  border-right: 2px solid var(--accent);
+  pointer-events: none;
+  transition: none;
+}
+
+/* ============================================================
+   MAIN CONTENT (VISUALIZERS + PIANO)
+   ============================================================ */
+#main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  position: relative;
+}
+
+/* Empty state */
+#empty-state {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--sp-4);
+  z-index: 5;
+  background: var(--bg-primary);
+}
+
+#empty-state .icon {
+  width: 64px;
+  height: 64px;
+  border: 2px dashed var(--border);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 28px;
+  color: var(--text-muted);
+}
+
+#empty-state h2 {
+  font-size: var(--fs-lg);
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+#empty-state p {
+  font-size: var(--fs-sm);
+  color: var(--text-muted);
+  text-align: center;
+  line-height: 1.6;
+}
+
+#empty-state.hidden { display: none; }
+
+/* Visualizer panels */
+#visualizers {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.viz-panel {
+  flex: 1;
+  position: relative;
+  min-height: 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.viz-panel canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+/* ============================================================
+   VIRTUAL PIANO KEYBOARD
+   ============================================================ */
+#piano-container {
+  height: 80px;
+  flex-shrink: 0;
+  position: relative;
+  overflow-x: auto;
+  overflow-y: hidden;
+  background: var(--bg-secondary);
+  border-top: 1px solid var(--border);
+}
+
+#piano {
+  height: 100%;
+  position: relative;
+  min-width: 100%;
+}
+
+.piano-key {
+  position: absolute;
+  top: 0;
+  border-radius: 0 0 var(--r-sm) var(--r-sm);
+  transition: background var(--transition), transform var(--transition);
+}
+
+.piano-key.white {
+  background: linear-gradient(180deg, #f0f0f0, #d8d8d8);
+  border: 1px solid #999;
+  z-index: 1;
+}
+
+.piano-key.black {
+  background: linear-gradient(180deg, #333, #111);
+  border: 1px solid #000;
+  z-index: 2;
+}
+
+.piano-key.active.white {
+  background: var(--accent);
+  transform: translateY(2px);
+}
+
+.piano-key.active.black {
+  background: var(--accent);
+  transform: translateY(2px);
+}
+
+.piano-key-label {
+  position: absolute;
+  bottom: 4px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 9px;
+  color: var(--text-muted);
+  pointer-events: none;
+  user-select: none;
+}
+
+.piano-key.white .piano-key-label { color: #888; }
+.piano-key.black .piano-key-label { color: #aaa; font-size: 7px; }
+
+/* ============================================================
+   TOAST NOTIFICATIONS
+   ============================================================ */
+#toast-container {
+  position: fixed;
+  top: var(--sp-4);
+  right: var(--sp-4);
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+}
+
+.toast {
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+  padding: var(--sp-3) var(--sp-4);
+  font-size: var(--fs-sm);
+  color: var(--text-primary);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+  backdrop-filter: blur(10px);
+  animation: toast-in 200ms ease forwards;
+  max-width: 320px;
+}
+
+.toast.error { border-color: var(--accent-secondary); }
+.toast.success { border-color: #2ecc71; }
+.toast.fade-out { animation: toast-out 200ms ease forwards; }
+
+@keyframes toast-in {
+  from { opacity: 0; transform: translateX(30px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes toast-out {
+  from { opacity: 1; transform: translateX(0); }
+  to { opacity: 0; transform: translateX(30px); }
+}
+
+/* ============================================================
+   AUDIO CONTEXT OVERLAY
+   ============================================================ */
+#audio-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(13, 13, 15, 0.9);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+  gap: var(--sp-4);
+  cursor: pointer;
+}
+
+#audio-overlay.hidden { display: none; }
+
+#audio-overlay .circle {
+  width: 80px;
+  height: 80px;
+  border: 2px solid var(--accent);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 32px;
+  color: var(--accent);
+  animation: pulse-ring 2s ease infinite;
+}
+
+@keyframes pulse-ring {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(76, 201, 240, 0.4); }
+  50% { box-shadow: 0 0 0 15px rgba(76, 201, 240, 0); }
+}
+
+#audio-overlay p {
+  font-size: var(--fs-md);
+  color: var(--text-muted);
+}
+
+/* ============================================================
+   LOADING SPINNER
+   ============================================================ */
+#loading-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(13, 13, 15, 0.85);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+  gap: var(--sp-3);
+}
+
+#loading-overlay.hidden { display: none; }
+
+.spinner {
+  width: 32px;
+  height: 32px;
+  border: 3px solid var(--border);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* ============================================================
+   RESPONSIVE
+   ============================================================ */
+@media (max-width: 900px) {
+  #header {
+    flex-wrap: wrap;
+    gap: var(--sp-3);
+  }
+  .control-group-label { display: none; }
+}
