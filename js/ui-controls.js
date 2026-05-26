@@ -86,18 +86,35 @@ export function initControls(dom) {
   });
 
   // ---- BPM ----
-  function handleBpmChange(value) {
-    const bpm = clamp(parseInt(value) || 120, 20, 300);
+  dom.bpmInput.addEventListener('input', (e) => {
+    const raw = parseInt(e.target.value);
+    if (isNaN(raw)) return;
+    if (raw >= 20 && raw <= 300) {
+      dom.bpmSlider.value = raw;
+      clearTimeout(state.bpmDebounceTimer);
+      state.bpmDebounceTimer = setTimeout(() => {
+        Tone.Transport.bpm.value = raw;
+      }, BPM_DEBOUNCE_MS);
+    }
+  });
+
+  dom.bpmInput.addEventListener('blur', () => {
+    const bpm = clamp(parseInt(dom.bpmInput.value) || 120, 20, 300);
+    dom.bpmInput.value = bpm;
+    dom.bpmSlider.value = bpm;
+    clearTimeout(state.bpmDebounceTimer);
+    Tone.Transport.bpm.value = bpm;
+  });
+
+  dom.bpmSlider.addEventListener('input', (e) => {
+    const bpm = clamp(parseInt(e.target.value) || 120, 20, 300);
     dom.bpmInput.value = bpm;
     dom.bpmSlider.value = bpm;
     clearTimeout(state.bpmDebounceTimer);
     state.bpmDebounceTimer = setTimeout(() => {
       Tone.Transport.bpm.value = bpm;
     }, BPM_DEBOUNCE_MS);
-  }
-
-  dom.bpmInput.addEventListener('input', (e) => handleBpmChange(e.target.value));
-  dom.bpmSlider.addEventListener('input', (e) => handleBpmChange(e.target.value));
+  });
 
   // ---- Reset ----
   dom.btnReset.addEventListener('click', () => {
