@@ -26,7 +26,8 @@ export function renderWaterfall(canvas, container, pianoEl, currentTime) {
   const timeBottom = currentTime;
 
   const pianoTotalWidth = pianoEl.offsetWidth || 1;
-  const scaleX = w / pianoTotalWidth;
+  // When the piano is centered (margin: 0 auto), offset notes to match
+  const offsetX = (w - pianoTotalWidth) / 2;
 
   // Octave grid lines (vertical)
   ctx.strokeStyle = '#1a1a2e';
@@ -35,7 +36,7 @@ export function renderWaterfall(canvas, container, pianoEl, currentTime) {
     if (midi % 12 === 0) {
       const pos = state.keyPositions.get(midi);
       if (pos) {
-        const x = pos.x * scaleX;
+        const x = offsetX + pos.x;
         ctx.beginPath();
         ctx.moveTo(x, 0);
         ctx.lineTo(x, h);
@@ -53,8 +54,8 @@ export function renderWaterfall(canvas, container, pianoEl, currentTime) {
     const pos = state.keyPositions.get(transposedMidi);
     if (!pos) continue;
 
-    const x = pos.x * scaleX;
-    const noteW = pos.w * scaleX;
+    const x = offsetX + pos.x;
+    const noteW = pos.w;
 
     const yBottom = h - (note.time - currentTime) * pps;
     const yTop = h - (noteEnd - currentTime) * pps;
