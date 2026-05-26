@@ -56,6 +56,14 @@
 
   <div class="separator"></div>
 
+  <!-- Count-in -->
+  <div class="control-group">
+    <span class="control-group-label">Count-in</span>
+    <input type="number" id="count-in-input" min="0" max="8" value="0" aria-label="Count-in beats" style="width: 50px;">
+  </div>
+
+  <div class="separator"></div>
+
   <!-- Tempo -->
   <div class="control-group">
     <span class="control-group-label">BPM</span>
@@ -147,6 +155,11 @@
 <!-- Virtual Piano -->
 <div id="piano-container">
   <div id="piano"></div>
+</div>
+
+<!-- Count-in overlay -->
+<div id="count-in-overlay" class="hidden">
+  <span id="count-in-beat"></span>
 </div>
 
 <!-- Toast container -->

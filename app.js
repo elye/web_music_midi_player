@@ -50,6 +50,9 @@
     pianoContainer: document.getElementById('piano-container'),
     piano: document.getElementById('piano'),
     toastContainer: document.getElementById('toast-container'),
+    countInInput: document.getElementById('count-in-input'),
+    countInOverlay: document.getElementById('count-in-overlay'),
+    countInBeat: document.getElementById('count-in-beat'),
   };
 
   /* ==========================================================
@@ -70,6 +73,7 @@
     bpmDebounceTimer: null,
     pianoKeys: [],             // DOM elements for piano keys
     keyPositions: new Map(),   // midi note -> {x, w, isBlack}
+    countingIn: false,         // True during count-in sequence
   };
 
   /* ==========================================================
@@ -541,6 +545,49 @@
   }
 
   /* ==========================================================
+     COUNT-IN
+     ========================================================== */
+  async function performCountIn(beats) {
+    const bpm = Tone.Transport.bpm.value;
+    const beatDurationMs = (60 / bpm) * 1000;
+
+    const clickSynth = new Tone.MembraneSynth({
+      pitchDecay: 0.008,
+      octaves: 2,
+      envelope: { attack: 0.001, decay: 0.1, sustain: 0, release: 0.05 },
+      volume: -6,
+    }).toDestination();
+
+    dom.countInOverlay.classList.remove('hidden');
+
+    return new Promise((resolve) => {
+      let beat = 0;
+
+      function tick() {
+        beat++;
+        dom.countInBeat.textContent = beat;
+        dom.countInBeat.classList.remove('count-in-pop');
+        void dom.countInBeat.offsetWidth; // force reflow to restart animation
+        dom.countInBeat.classList.add('count-in-pop');
+
+        clickSynth.triggerAttackRelease('C2', '32n');
+
+        if (beat < beats) {
+          setTimeout(tick, beatDurationMs);
+        } else {
+          setTimeout(() => {
+            dom.countInOverlay.classList.add('hidden');
+            clickSynth.dispose();
+            resolve();
+          }, beatDurationMs);
+        }
+      }
+
+      tick();
+    });
+  }
+
+  /* ==========================================================
      PLAYBACK CONTROLS
      ========================================================== */
   function schedulePart() {
@@ -826,10 +873,24 @@
 
   // Transport
   dom.btnPlay.addEventListener('click', async () => {
-    if (!state.midi) return;
+    if (!state.midi || state.countingIn) return;
     if (state.isPlaying) {
       pausePlayback();
     } else {
+      const countIn = parseInt(dom.countInInput.value) || 0;
+      const shouldCountIn = countIn > 0 && Tone.Transport.state === 'stopped';
+
+      if (shouldCountIn) {
+        await ensureAudioContext();
+        state.countingIn = true;
+        dom.btnPlay.disabled = true;
+        dom.btnStop.disabled = true;
+        await performCountIn(countIn);
+        state.countingIn = false;
+        dom.btnPlay.disabled = false;
+        dom.btnStop.disabled = false;
+      }
+
       await startPlayback();
     }
   });
