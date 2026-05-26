@@ -7,7 +7,7 @@
   const MIDI_NOTE_MIN = 21;   // A0
   const MIDI_NOTE_MAX = 108;  // C8
   const TOTAL_KEYS = MIDI_NOTE_MAX - MIDI_NOTE_MIN + 1;
-  const NOTE_NAMES = ['C','C#','D','D#','E','F','F#','G','G#','A','A#','B'];
+  const NOTE_NAMES = ['C','C♯','D','D♯','E','F','F♯','G','G♯','A','A♯','B'];
   const PLAYHEAD_X_RATIO = 0.25;       // Playhead at 25% from left
   const PIXELS_PER_SECOND = 200;       // Base scale for piano roll
   const WATERFALL_PPS = 150;           // Waterfall pixels per second
@@ -225,6 +225,12 @@
         key.style.width = BLACK_KEY_WIDTH + 'px';
         key.style.height = (80 * BLACK_KEY_HEIGHT_RATIO) + 'px';
         key.dataset.midi = midi;
+
+        // Label black keys with sharp name
+        const label = document.createElement('span');
+        label.className = 'piano-key-label';
+        label.textContent = noteName(midi);
+        key.appendChild(label);
 
         dom.piano.appendChild(key);
         state.pianoKeys[midi] = key;
