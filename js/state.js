@@ -1,0 +1,69 @@
+/* ==========================================================
+   STATE — Centralized state store with event emitter
+   ========================================================== */
+
+class StateStore {
+  constructor() {
+    this._listeners = new Map();
+
+    // MIDI data
+    this.midi = null;
+    this.fileName = '';
+    this.notes = [];              // Flattened, sorted: {midi, time, duration, velocity, channel}
+    this.totalDuration = 0;
+    this.originalBpm = 120;
+
+    // Playback
+    this.isPlaying = false;
+    this.countingIn = false;
+
+    // Modifications
+    this.transpose = 0;
+
+    // Audio references (managed by AudioEngine)
+    this.synth = null;
+    this.part = null;
+
+    // Active notes for visualization
+    this.activeNotes = new Set();
+
+    // Piano key data
+    this.pianoKeys = [];           // DOM elements indexed by MIDI note
+    this.keyPositions = new Map(); // midi → {x, w, isBlack}
+
+    // Animation
+    this.animFrameId = null;
+
+    // Debounce timer for BPM
+    this.bpmDebounceTimer = null;
+  }
+
+  /** Subscribe to a named event */
+  on(event, callback) {
+    if (!this._listeners.has(event)) {
+      this._listeners.set(event, []);
+    }
+    this._listeners.get(event).push(callback);
+  }
+
+  /** Remove a subscription */
+  off(event, callback) {
+    const cbs = this._listeners.get(event);
+    if (cbs) {
+      const idx = cbs.indexOf(callback);
+      if (idx !== -1) cbs.splice(idx, 1);
+    }
+  }
+
+  /** Emit a named event with optional data */
+  emit(event, data) {
+    const cbs = this._listeners.get(event);
+    if (cbs) {
+      for (const cb of cbs) cb(data);
+    }
+  }
+}
+
+/** Singleton state instance */
+const state = new StateStore();
+export default state;

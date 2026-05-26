@@ -1,0 +1,224 @@
+/* ============================================================
+   CONTROLS — Buttons, inputs, header bar, seek bar
+   ============================================================ */
+
+/* Buttons */
+button {
+  font-family: inherit;
+  font-size: var(--fs-sm);
+  font-weight: 500;
+  border: 1px solid var(--border);
+  background: var(--bg-tertiary);
+  color: var(--text-primary);
+  border-radius: var(--r-md);
+  padding: var(--sp-2) var(--sp-3);
+  cursor: pointer;
+  transition: background var(--transition), border-color var(--transition), transform var(--transition), box-shadow var(--transition);
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-1);
+  white-space: nowrap;
+}
+
+button:hover:not(:disabled) {
+  background: var(--bg-secondary);
+  border-color: var(--accent);
+}
+
+button:active:not(:disabled) {
+  transform: scale(0.97);
+}
+
+button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+button:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+button.primary {
+  background: var(--accent);
+  color: var(--bg-primary);
+  border-color: var(--accent);
+  font-weight: 600;
+}
+
+button.primary:hover:not(:disabled) {
+  background: #3ab8df;
+  border-color: #3ab8df;
+}
+
+button.secondary {
+  background: transparent;
+  border-color: var(--border);
+  color: var(--text-muted);
+  font-weight: 400;
+}
+
+button.secondary:hover:not(:disabled) {
+  color: var(--text-primary);
+  border-color: var(--text-muted);
+  background: var(--bg-tertiary);
+}
+
+/* Inputs */
+input[type="number"], select {
+  font-family: inherit;
+  font-size: var(--fs-sm);
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  padding: var(--sp-1) var(--sp-2);
+  transition: border-color var(--transition);
+  width: 70px;
+}
+
+input[type="number"]:focus, select:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+
+input[type="range"] {
+  -webkit-appearance: none;
+  appearance: none;
+  height: 4px;
+  background: var(--border);
+  border-radius: 2px;
+  cursor: pointer;
+}
+
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 14px;
+  height: 14px;
+  background: var(--accent);
+  border-radius: 50%;
+  cursor: pointer;
+  transition: transform var(--transition);
+}
+
+input[type="range"]::-webkit-slider-thumb:hover {
+  transform: scale(1.2);
+}
+
+input[type="range"]:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* Header / Control Bar */
+#header {
+  background: var(--bg-secondary);
+  border-bottom: 1px solid var(--border);
+  padding: var(--sp-2) var(--sp-4);
+  display: flex;
+  align-items: center;
+  gap: var(--sp-5);
+  flex-shrink: 0;
+  backdrop-filter: blur(10px);
+  z-index: 10;
+}
+
+.control-group {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+}
+
+.control-group-label {
+  font-size: var(--fs-xs);
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-right: var(--sp-1);
+}
+
+.separator {
+  width: 1px;
+  height: 24px;
+  background: var(--border);
+}
+
+#time-display {
+  font-variant-numeric: tabular-nums;
+  font-size: var(--fs-sm);
+  color: var(--text-muted);
+  min-width: 140px;
+  text-align: right;
+}
+
+#time-display .current-time {
+  color: var(--text-primary);
+  font-weight: 600;
+}
+
+/* Transport buttons */
+.transport-btn {
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+}
+
+.transport-btn.play-btn {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--bg-primary);
+  width: 36px;
+  height: 36px;
+}
+
+.transport-btn.play-btn:hover:not(:disabled) {
+  background: #3ab8df;
+  border-color: #3ab8df;
+}
+
+#transpose-select {
+  width: 160px;
+}
+
+/* Seek Bar */
+#seek-bar-container {
+  height: 28px;
+  background: var(--bg-secondary);
+  border-bottom: 1px solid var(--border);
+  position: relative;
+  cursor: pointer;
+  flex-shrink: 0;
+  overflow: hidden;
+}
+
+#seek-density-canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+#seek-progress {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  width: 0%;
+  background: linear-gradient(90deg, rgba(76, 201, 240, 0.15), rgba(76, 201, 240, 0.05));
+  border-right: 2px solid var(--accent);
+  pointer-events: none;
+  transition: none;
+}
+
+/* Responsive */
+@media (max-width: 900px) {
+  #header {
+    flex-wrap: wrap;
+    gap: var(--sp-3);
+  }
+  .control-group-label { display: none; }
+}

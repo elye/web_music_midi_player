@@ -1,0 +1,62 @@
+/* ============================================================
+   PIANO — Virtual keyboard styling
+   ============================================================ */
+
+#piano-container {
+  height: 80px;
+  flex-shrink: 0;
+  position: relative;
+  overflow-x: auto;
+  overflow-y: hidden;
+  background: var(--bg-secondary);
+  border-top: 1px solid var(--border);
+}
+
+#piano {
+  height: 100%;
+  position: relative;
+  margin: 0 auto;
+}
+
+.piano-key {
+  position: absolute;
+  top: 0;
+  border-radius: 0 0 var(--r-sm) var(--r-sm);
+  transition: background var(--transition), transform var(--transition);
+}
+
+.piano-key.white {
+  background: linear-gradient(180deg, #f0f0f0, #d8d8d8);
+  border: 1px solid #999;
+  z-index: 1;
+}
+
+.piano-key.black {
+  background: linear-gradient(180deg, #333, #111);
+  border: 1px solid #000;
+  z-index: 2;
+}
+
+.piano-key.active.white {
+  background: var(--accent);
+  transform: translateY(2px);
+}
+
+.piano-key.active.black {
+  background: var(--accent);
+  transform: translateY(2px);
+}
+
+.piano-key-label {
+  position: absolute;
+  bottom: 4px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 9px;
+  color: var(--text-muted);
+  pointer-events: none;
+  user-select: none;
+}
+
+.piano-key.white .piano-key-label { color: #888; }
+.piano-key.black .piano-key-label { color: #aaa; font-size: 7px; }
