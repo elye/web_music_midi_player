@@ -118,6 +118,19 @@ button.primary:hover:not(:disabled) {
   border-color: #3ab8df;
 }
 
+button.secondary {
+  background: transparent;
+  border-color: var(--border);
+  color: var(--text-muted);
+  font-weight: 400;
+}
+
+button.secondary:hover:not(:disabled) {
+  color: var(--text-primary);
+  border-color: var(--text-muted);
+  background: var(--bg-tertiary);
+}
+
 input[type="number"], select {
   font-family: inherit;
   font-size: var(--fs-sm);

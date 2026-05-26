@@ -34,6 +34,7 @@
     bpmInput: document.getElementById('bpm-input'),
     bpmSlider: document.getElementById('bpm-slider'),
     transposeSelect: document.getElementById('transpose-select'),
+    btnReset: document.getElementById('btn-reset'),
     currentTime: document.querySelector('#time-display .current-time'),
     totalTime: document.querySelector('#time-display .total-time'),
     seekContainer: document.getElementById('seek-bar-container'),
@@ -704,6 +705,7 @@
       dom.btnPlay.disabled = false;
       dom.btnStop.disabled = false;
       dom.btnRewind.disabled = false;
+      dom.btnReset.disabled = false;
 
       // Show visualizers
       dom.emptyState.classList.add('hidden');
@@ -856,6 +858,35 @@
 
   dom.bpmInput.addEventListener('input', (e) => handleBpmChange(e.target.value));
   dom.bpmSlider.addEventListener('input', (e) => handleBpmChange(e.target.value));
+
+  // Reset to original
+  dom.btnReset.addEventListener('click', () => {
+    if (!state.midi) return;
+
+    // Reset BPM
+    const bpm = state.originalBpm;
+    dom.bpmInput.value = bpm;
+    dom.bpmSlider.value = bpm;
+    Tone.Transport.bpm.value = bpm;
+
+    // Reset transpose
+    state.transpose = 0;
+    dom.transposeSelect.value = '0';
+
+    // Reschedule if playing
+    if (state.isPlaying) {
+      const currentSeconds = Tone.Transport.seconds;
+      Tone.Transport.pause();
+      if (state.part) {
+        state.part.dispose();
+        state.part = null;
+      }
+      schedulePart();
+      Tone.Transport.start();
+    }
+
+    showToast(`Reset to ${bpm} BPM, no transpose`, 'info');
+  });
 
   // Transpose
   dom.transposeSelect.addEventListener('change', (e) => {
