@@ -1,0 +1,1634 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MIDI Visualizer & Editor</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+/* ============================================================
+   CSS RESET & CUSTOM PROPERTIES
+   ============================================================ */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+:root {
+  --bg-primary: #0d0d0f;
+  --bg-secondary: #1a1a2e;
+  --bg-tertiary: #16213e;
+  --accent: #4cc9f0;
+  --accent-secondary: #f72585;
+  --text-primary: #e0e0e0;
+  --text-muted: #6c757d;
+  --border: #2a2a3e;
+
+  /* Type scale 1.125 */
+  --fs-xs: 0.79rem;
+  --fs-sm: 0.889rem;
+  --fs-base: 1rem;
+  --fs-md: 1.125rem;
+  --fs-lg: 1.266rem;
+  --fs-xl: 1.424rem;
+
+  /* Spacing (8px grid) */
+  --sp-1: 4px;
+  --sp-2: 8px;
+  --sp-3: 12px;
+  --sp-4: 16px;
+  --sp-5: 24px;
+  --sp-6: 32px;
+  --sp-7: 40px;
+  --sp-8: 48px;
+
+  /* Radii */
+  --r-sm: 2px;
+  --r-md: 4px;
+  --r-lg: 6px;
+
+  /* Transitions */
+  --transition: 150ms ease;
+
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  font-size: 14px;
+  color: var(--text-primary);
+  background: var(--bg-primary);
+}
+
+html, body {
+  height: 100%;
+  overflow: hidden;
+}
+
+body {
+  display: flex;
+  flex-direction: column;
+}
+
+/* ============================================================
+   SCROLLBAR
+   ============================================================ */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: var(--bg-primary); }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--text-muted); }
+
+/* ============================================================
+   BUTTONS & INPUTS
+   ============================================================ */
+button {
+  font-family: inherit;
+  font-size: var(--fs-sm);
+  font-weight: 500;
+  border: 1px solid var(--border);
+  background: var(--bg-tertiary);
+  color: var(--text-primary);
+  border-radius: var(--r-md);
+  padding: var(--sp-2) var(--sp-3);
+  cursor: pointer;
+  transition: background var(--transition), border-color var(--transition), transform var(--transition), box-shadow var(--transition);
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-1);
+  white-space: nowrap;
+}
+
+button:hover:not(:disabled) {
+  background: var(--bg-secondary);
+  border-color: var(--accent);
+}
+
+button:active:not(:disabled) {
+  transform: scale(0.97);
+}
+
+button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+button:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+button.primary {
+  background: var(--accent);
+  color: var(--bg-primary);
+  border-color: var(--accent);
+  font-weight: 600;
+}
+
+button.primary:hover:not(:disabled) {
+  background: #3ab8df;
+  border-color: #3ab8df;
+}
+
+input[type="number"], select {
+  font-family: inherit;
+  font-size: var(--fs-sm);
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  padding: var(--sp-1) var(--sp-2);
+  transition: border-color var(--transition);
+  width: 70px;
+}
+
+input[type="number"]:focus, select:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+
+input[type="range"] {
+  -webkit-appearance: none;
+  appearance: none;
+  height: 4px;
+  background: var(--border);
+  border-radius: 2px;
+  cursor: pointer;
+}
+
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 14px;
+  height: 14px;
+  background: var(--accent);
+  border-radius: 50%;
+  cursor: pointer;
+  transition: transform var(--transition);
+}
+
+input[type="range"]::-webkit-slider-thumb:hover {
+  transform: scale(1.2);
+}
+
+input[type="range"]:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* ============================================================
+   HEADER / CONTROL BAR
+   ============================================================ */
+#header {
+  background: var(--bg-secondary);
+  border-bottom: 1px solid var(--border);
+  padding: var(--sp-2) var(--sp-4);
+  display: flex;
+  align-items: center;
+  gap: var(--sp-5);
+  flex-shrink: 0;
+  backdrop-filter: blur(10px);
+  z-index: 10;
+}
+
+.control-group {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+}
+
+.control-group-label {
+  font-size: var(--fs-xs);
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-right: var(--sp-1);
+}
+
+.separator {
+  width: 1px;
+  height: 24px;
+  background: var(--border);
+}
+
+#time-display {
+  font-variant-numeric: tabular-nums;
+  font-size: var(--fs-sm);
+  color: var(--text-muted);
+  min-width: 140px;
+  text-align: right;
+}
+
+#time-display .current-time {
+  color: var(--text-primary);
+  font-weight: 600;
+}
+
+/* Transport buttons */
+.transport-btn {
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+}
+
+.transport-btn.play-btn {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--bg-primary);
+  width: 36px;
+  height: 36px;
+}
+
+.transport-btn.play-btn:hover:not(:disabled) {
+  background: #3ab8df;
+  border-color: #3ab8df;
+}
+
+#transpose-select {
+  width: 160px;
+}
+
+/* ============================================================
+   SEEK BAR
+   ============================================================ */
+#seek-bar-container {
+  height: 28px;
+  background: var(--bg-secondary);
+  border-bottom: 1px solid var(--border);
+  position: relative;
+  cursor: pointer;
+  flex-shrink: 0;
+  overflow: hidden;
+}
+
+#seek-density-canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+#seek-progress {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  width: 0%;
+  background: linear-gradient(90deg, rgba(76, 201, 240, 0.15), rgba(76, 201, 240, 0.05));
+  border-right: 2px solid var(--accent);
+  pointer-events: none;
+  transition: none;
+}
+
+/* ============================================================
+   MAIN CONTENT (VISUALIZERS + PIANO)
+   ============================================================ */
+#main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  position: relative;
+}
+
+/* Empty state */
+#empty-state {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--sp-4);
+  z-index: 5;
+  background: var(--bg-primary);
+}
+
+#empty-state .icon {
+  width: 64px;
+  height: 64px;
+  border: 2px dashed var(--border);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 28px;
+  color: var(--text-muted);
+}
+
+#empty-state h2 {
+  font-size: var(--fs-lg);
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+#empty-state p {
+  font-size: var(--fs-sm);
+  color: var(--text-muted);
+  text-align: center;
+  line-height: 1.6;
+}
+
+#empty-state.hidden { display: none; }
+
+/* Visualizer panels */
+#visualizers {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.viz-panel {
+  flex: 1;
+  position: relative;
+  min-height: 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.viz-panel canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+/* ============================================================
+   VIRTUAL PIANO KEYBOARD
+   ============================================================ */
+#piano-container {
+  height: 80px;
+  flex-shrink: 0;
+  position: relative;
+  overflow-x: auto;
+  overflow-y: hidden;
+  background: var(--bg-secondary);
+  border-top: 1px solid var(--border);
+}
+
+#piano {
+  height: 100%;
+  position: relative;
+  min-width: 100%;
+}
+
+.piano-key {
+  position: absolute;
+  top: 0;
+  border-radius: 0 0 var(--r-sm) var(--r-sm);
+  transition: background var(--transition), transform var(--transition);
+}
+
+.piano-key.white {
+  background: linear-gradient(180deg, #f0f0f0, #d8d8d8);
+  border: 1px solid #999;
+  z-index: 1;
+}
+
+.piano-key.black {
+  background: linear-gradient(180deg, #333, #111);
+  border: 1px solid #000;
+  z-index: 2;
+}
+
+.piano-key.active.white {
+  background: var(--accent);
+  transform: translateY(2px);
+}
+
+.piano-key.active.black {
+  background: var(--accent);
+  transform: translateY(2px);
+}
+
+.piano-key-label {
+  position: absolute;
+  bottom: 4px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 9px;
+  color: var(--text-muted);
+  pointer-events: none;
+  user-select: none;
+}
+
+.piano-key.white .piano-key-label { color: #888; }
+.piano-key.black .piano-key-label { color: #aaa; font-size: 7px; }
+
+/* ============================================================
+   TOAST NOTIFICATIONS
+   ============================================================ */
+#toast-container {
+  position: fixed;
+  top: var(--sp-4);
+  right: var(--sp-4);
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+}
+
+.toast {
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+  padding: var(--sp-3) var(--sp-4);
+  font-size: var(--fs-sm);
+  color: var(--text-primary);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+  backdrop-filter: blur(10px);
+  animation: toast-in 200ms ease forwards;
+  max-width: 320px;
+}
+
+.toast.error { border-color: var(--accent-secondary); }
+.toast.success { border-color: #2ecc71; }
+.toast.fade-out { animation: toast-out 200ms ease forwards; }
+
+@keyframes toast-in {
+  from { opacity: 0; transform: translateX(30px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes toast-out {
+  from { opacity: 1; transform: translateX(0); }
+  to { opacity: 0; transform: translateX(30px); }
+}
+
+/* ============================================================
+   AUDIO CONTEXT OVERLAY
+   ============================================================ */
+#audio-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(13, 13, 15, 0.9);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+  gap: var(--sp-4);
+  cursor: pointer;
+}
+
+#audio-overlay.hidden { display: none; }
+
+#audio-overlay .circle {
+  width: 80px;
+  height: 80px;
+  border: 2px solid var(--accent);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 32px;
+  color: var(--accent);
+  animation: pulse-ring 2s ease infinite;
+}
+
+@keyframes pulse-ring {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(76, 201, 240, 0.4); }
+  50% { box-shadow: 0 0 0 15px rgba(76, 201, 240, 0); }
+}
+
+#audio-overlay p {
+  font-size: var(--fs-md);
+  color: var(--text-muted);
+}
+
+/* ============================================================
+   LOADING SPINNER
+   ============================================================ */
+#loading-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(13, 13, 15, 0.85);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+  gap: var(--sp-3);
+}
+
+#loading-overlay.hidden { display: none; }
+
+.spinner {
+  width: 32px;
+  height: 32px;
+  border: 3px solid var(--border);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* ============================================================
+   RESPONSIVE
+   ============================================================ */
+@media (max-width: 900px) {
+  #header {
+    flex-wrap: wrap;
+    gap: var(--sp-3);
+  }
+  .control-group-label { display: none; }
+}
+</style>
+</head>
+<body>
+
+<!-- ============================================================
+     AUDIO CONTEXT OVERLAY
+     ============================================================ -->
+<div id="audio-overlay" class="hidden">
+  <div class="circle">&#9654;</div>
+  <p>Click anywhere to enable audio</p>
+</div>
+
+<!-- ============================================================
+     HEADER / CONTROL BAR
+     ============================================================ -->
+<div id="header">
+  <!-- File -->
+  <div class="control-group">
+    <span class="control-group-label">File</span>
+    <button id="btn-load" class="primary" aria-label="Load MIDI file">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+      Load MIDI
+    </button>
+    <input type="file" id="file-input" accept=".mid,.midi" hidden>
+    <button id="btn-export" disabled aria-label="Export edited MIDI file">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+      Export
+    </button>
+  </div>
+
+  <div class="separator"></div>
+
+  <!-- Transport -->
+  <div class="control-group">
+    <span class="control-group-label">Transport</span>
+    <button id="btn-rewind" class="transport-btn" disabled aria-label="Rewind to beginning">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><polygon points="11 19 2 12 11 5"/><polygon points="22 19 13 12 22 5"/></svg>
+    </button>
+    <button id="btn-play" class="transport-btn play-btn" disabled aria-label="Play / Pause">
+      <svg id="icon-play" width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><polygon points="6 3 20 12 6 21"/></svg>
+      <svg id="icon-pause" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style="display:none"><rect x="5" y="3" width="4" height="18"/><rect x="15" y="3" width="4" height="18"/></svg>
+    </button>
+    <button id="btn-stop" class="transport-btn" disabled aria-label="Stop playback">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><rect x="4" y="4" width="16" height="16" rx="2"/></svg>
+    </button>
+  </div>
+
+  <div class="separator"></div>
+
+  <!-- Tempo -->
+  <div class="control-group">
+    <span class="control-group-label">BPM</span>
+    <input type="number" id="bpm-input" min="20" max="300" value="120" aria-label="Tempo in BPM">
+    <input type="range" id="bpm-slider" min="20" max="300" value="120" aria-label="Tempo slider" style="width: 80px;">
+  </div>
+
+  <div class="separator"></div>
+
+  <!-- Transpose -->
+  <div class="control-group">
+    <span class="control-group-label">Transpose</span>
+    <select id="transpose-select" aria-label="Transpose semitones">
+      <option value="-12">−12 — Octave Down</option>
+      <option value="-11">−11 — Major 7th Down</option>
+      <option value="-10">−10 — Minor 7th Down</option>
+      <option value="-9">−9 — Major 6th Down</option>
+      <option value="-8">−8 — Minor 6th Down</option>
+      <option value="-7">−7 — Perfect 5th Down</option>
+      <option value="-6">−6 — Tritone Down</option>
+      <option value="-5">−5 — Perfect 4th Down</option>
+      <option value="-4">−4 — Major 3rd Down</option>
+      <option value="-3">−3 — Minor 3rd Down</option>
+      <option value="-2">−2 — Major 2nd Down</option>
+      <option value="-1">−1 — Minor 2nd Down</option>
+      <option value="0" selected>0 — No Transpose</option>
+      <option value="1">+1 — Minor 2nd</option>
+      <option value="2">+2 — Major 2nd</option>
+      <option value="3">+3 — Minor 3rd</option>
+      <option value="4">+4 — Major 3rd</option>
+      <option value="5">+5 — Perfect 4th</option>
+      <option value="6">+6 — Tritone</option>
+      <option value="7">+7 — Perfect 5th</option>
+      <option value="8">+8 — Minor 6th</option>
+      <option value="9">+9 — Major 6th</option>
+      <option value="10">+10 — Minor 7th</option>
+      <option value="11">+11 — Major 7th</option>
+      <option value="12">+12 — Octave Up</option>
+    </select>
+  </div>
+
+  <div class="separator"></div>
+
+  <!-- Time -->
+  <div id="time-display">
+    <span class="current-time">00:00.000</span> / <span class="total-time">00:00.000</span>
+  </div>
+</div>
+
+<!-- Seek bar -->
+<div id="seek-bar-container">
+  <canvas id="seek-density-canvas"></canvas>
+  <div id="seek-progress"></div>
+</div>
+
+<!-- ============================================================
+     MAIN AREA
+     ============================================================ -->
+<div id="main">
+  <!-- Empty state -->
+  <div id="empty-state">
+    <div class="icon">♪</div>
+    <h2>Load a MIDI File</h2>
+    <p>Drag & drop or click <strong>Load MIDI</strong> to get started.<br>Supported formats: <code>.mid</code>, <code>.midi</code></p>
+  </div>
+
+  <!-- Loading overlay -->
+  <div id="loading-overlay" class="hidden">
+    <div class="spinner"></div>
+    <span style="color:var(--text-muted); font-size:var(--fs-sm);">Parsing MIDI…</span>
+  </div>
+
+  <!-- Visualizers -->
+  <div id="visualizers" style="display:none;">
+    <div class="viz-panel" id="piano-roll-panel">
+      <canvas id="piano-roll-canvas"></canvas>
+    </div>
+    <div class="viz-panel" id="waterfall-panel">
+      <canvas id="waterfall-canvas"></canvas>
+    </div>
+  </div>
+</div>
+
+<!-- Virtual Piano -->
+<div id="piano-container">
+  <div id="piano"></div>
+</div>
+
+<!-- Toast container -->
+<div id="toast-container"></div>
+
+<!-- ============================================================
+     SCRIPTS
+     ============================================================ -->
+<script src="https://unpkg.com/tone@14"></script>
+<script src="https://unpkg.com/@tonejs/midi@2"></script>
+<script>
+(() => {
+  'use strict';
+
+  /* ==========================================================
+     CONSTANTS
+     ========================================================== */
+  const MIDI_NOTE_MIN = 21;   // A0
+  const MIDI_NOTE_MAX = 108;  // C8
+  const TOTAL_KEYS = MIDI_NOTE_MAX - MIDI_NOTE_MIN + 1;
+  const NOTE_NAMES = ['C','C#','D','D#','E','F','F#','G','G#','A','A#','B'];
+  const PLAYHEAD_X_RATIO = 0.25;       // Playhead at 25% from left
+  const PIXELS_PER_SECOND = 200;       // Base scale for piano roll
+  const WATERFALL_PPS = 150;           // Waterfall pixels per second
+  const SEEK_DEBOUNCE_MS = 50;
+  const BPM_DEBOUNCE_MS = 50;
+  const TOAST_DURATION_MS = 3500;
+  const WHITE_KEY_WIDTH = 18;
+  const BLACK_KEY_WIDTH = 12;
+  const BLACK_KEY_HEIGHT_RATIO = 0.6;
+
+  /* ==========================================================
+     DOM REFERENCES
+     ========================================================== */
+  const dom = {
+    audioOverlay: document.getElementById('audio-overlay'),
+    btnLoad: document.getElementById('btn-load'),
+    btnExport: document.getElementById('btn-export'),
+    btnRewind: document.getElementById('btn-rewind'),
+    btnPlay: document.getElementById('btn-play'),
+    btnStop: document.getElementById('btn-stop'),
+    iconPlay: document.getElementById('icon-play'),
+    iconPause: document.getElementById('icon-pause'),
+    fileInput: document.getElementById('file-input'),
+    bpmInput: document.getElementById('bpm-input'),
+    bpmSlider: document.getElementById('bpm-slider'),
+    transposeSelect: document.getElementById('transpose-select'),
+    currentTime: document.querySelector('#time-display .current-time'),
+    totalTime: document.querySelector('#time-display .total-time'),
+    seekContainer: document.getElementById('seek-bar-container'),
+    seekDensityCanvas: document.getElementById('seek-density-canvas'),
+    seekProgress: document.getElementById('seek-progress'),
+    emptyState: document.getElementById('empty-state'),
+    loadingOverlay: document.getElementById('loading-overlay'),
+    visualizers: document.getElementById('visualizers'),
+    pianoRollPanel: document.getElementById('piano-roll-panel'),
+    pianoRollCanvas: document.getElementById('piano-roll-canvas'),
+    waterfallPanel: document.getElementById('waterfall-panel'),
+    waterfallCanvas: document.getElementById('waterfall-canvas'),
+    pianoContainer: document.getElementById('piano-container'),
+    piano: document.getElementById('piano'),
+    toastContainer: document.getElementById('toast-container'),
+  };
+
+  /* ==========================================================
+     STATE
+     ========================================================== */
+  const state = {
+    midi: null,
+    fileName: '',
+    notes: [],            // Flattened, sorted notes: {midi, time, duration, velocity, channel}
+    totalDuration: 0,
+    originalBpm: 120,     // BPM from the MIDI file, used for time conversion
+    isPlaying: false,
+    transpose: 0,
+    synth: null,
+    part: null,
+    activeNotes: new Set(),    // Currently sounding MIDI note numbers (transposed)
+    animFrameId: null,
+    bpmDebounceTimer: null,
+    pianoKeys: [],             // DOM elements for piano keys
+    keyPositions: new Map(),   // midi note -> {x, w, isBlack}
+  };
+
+  /* ==========================================================
+     UTILITY FUNCTIONS
+     ========================================================== */
+  function noteName(midi) {
+    const octave = Math.floor(midi / 12) - 1;
+    return NOTE_NAMES[midi % 12] + octave;
+  }
+
+  function isBlackKey(midi) {
+    const n = midi % 12;
+    return n === 1 || n === 3 || n === 6 || n === 8 || n === 10;
+  }
+
+  function formatTime(seconds) {
+    if (!isFinite(seconds) || seconds < 0) seconds = 0;
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    const whole = Math.floor(secs);
+    const ms = Math.floor((secs - whole) * 1000);
+    return `${String(mins).padStart(2,'0')}:${String(whole).padStart(2,'0')}.${String(ms).padStart(3,'0')}`;
+  }
+
+  function clamp(v, lo, hi) { return Math.max(lo, Math.min(hi, v)); }
+
+  function midiToFreq(midi) {
+    return 440 * Math.pow(2, (midi - 69) / 12);
+  }
+
+  // Convert MIDI time (seconds at original BPM) to Transport seconds
+  function midiTimeToTransport(midiTime) {
+    return midiTime * (state.originalBpm / Tone.Transport.bpm.value);
+  }
+
+  // Convert Transport seconds to MIDI time (seconds at original BPM)
+  function transportToMidiTime(transportSeconds) {
+    return transportSeconds * (Tone.Transport.bpm.value / state.originalBpm);
+  }
+
+  /* ==========================================================
+     TOAST NOTIFICATIONS
+     ========================================================== */
+  function showToast(message, type = 'info') {
+    const el = document.createElement('div');
+    el.className = `toast ${type}`;
+    el.textContent = message;
+    dom.toastContainer.appendChild(el);
+    setTimeout(() => {
+      el.classList.add('fade-out');
+      el.addEventListener('animationend', () => el.remove());
+    }, TOAST_DURATION_MS);
+  }
+
+  /* ==========================================================
+     AUDIO CONTEXT SETUP
+     ========================================================== */
+  async function ensureAudioContext() {
+    if (Tone.context.state === 'suspended') {
+      dom.audioOverlay.classList.remove('hidden');
+      return new Promise(resolve => {
+        const handler = async () => {
+          await Tone.start();
+          dom.audioOverlay.classList.add('hidden');
+          dom.audioOverlay.removeEventListener('click', handler);
+          document.removeEventListener('click', handler);
+          resolve();
+        };
+        dom.audioOverlay.addEventListener('click', handler);
+      });
+    }
+  }
+
+  /* ==========================================================
+     SYNTH SETUP
+     ========================================================== */
+  function createSynth() {
+    if (state.synth) {
+      state.synth.dispose();
+    }
+    state.synth = new Tone.PolySynth(Tone.FMSynth, {
+      maxPolyphony: 64,
+      voice: Tone.FMSynth,
+      options: {
+        modulationIndex: 2,
+        envelope: { attack: 0.01, decay: 0.2, sustain: 0.3, release: 0.4 },
+        volume: -12,
+      }
+    }).toDestination();
+  }
+
+  /* ==========================================================
+     VIRTUAL PIANO KEYBOARD
+     ========================================================== */
+  function buildPiano() {
+    dom.piano.innerHTML = '';
+    state.pianoKeys = [];
+    state.keyPositions.clear();
+
+    // Calculate positions for each key
+    let whiteIndex = 0;
+    // First pass: count white keys and assign positions
+    const positions = [];
+    for (let midi = MIDI_NOTE_MIN; midi <= MIDI_NOTE_MAX; midi++) {
+      if (!isBlackKey(midi)) {
+        positions.push({ midi, x: whiteIndex * WHITE_KEY_WIDTH, w: WHITE_KEY_WIDTH, isBlack: false });
+        whiteIndex++;
+      }
+    }
+
+    const totalWidth = whiteIndex * WHITE_KEY_WIDTH;
+    dom.piano.style.width = totalWidth + 'px';
+
+    // White keys first
+    for (const pos of positions) {
+      state.keyPositions.set(pos.midi, pos);
+      const key = document.createElement('div');
+      key.className = 'piano-key white';
+      key.style.left = pos.x + 'px';
+      key.style.width = WHITE_KEY_WIDTH + 'px';
+      key.style.height = '100%';
+      key.dataset.midi = pos.midi;
+
+      // Label on C notes
+      if (pos.midi % 12 === 0) {
+        const label = document.createElement('span');
+        label.className = 'piano-key-label';
+        label.textContent = noteName(pos.midi);
+        key.appendChild(label);
+      }
+
+      dom.piano.appendChild(key);
+      state.pianoKeys[pos.midi] = key;
+    }
+
+    // Black keys on second pass
+    for (let midi = MIDI_NOTE_MIN; midi <= MIDI_NOTE_MAX; midi++) {
+      if (isBlackKey(midi)) {
+        // Find the white key just below
+        const prevWhite = state.keyPositions.get(midi - 1);
+        if (!prevWhite) continue;
+        const x = prevWhite.x + WHITE_KEY_WIDTH - BLACK_KEY_WIDTH / 2;
+        const pos = { midi, x, w: BLACK_KEY_WIDTH, isBlack: true };
+        state.keyPositions.set(midi, pos);
+
+        const key = document.createElement('div');
+        key.className = 'piano-key black';
+        key.style.left = x + 'px';
+        key.style.width = BLACK_KEY_WIDTH + 'px';
+        key.style.height = (80 * BLACK_KEY_HEIGHT_RATIO) + 'px';
+        key.dataset.midi = midi;
+
+        dom.piano.appendChild(key);
+        state.pianoKeys[midi] = key;
+      }
+    }
+  }
+
+  function updatePianoHighlights() {
+    for (let midi = MIDI_NOTE_MIN; midi <= MIDI_NOTE_MAX; midi++) {
+      const key = state.pianoKeys[midi];
+      if (!key) continue;
+      if (state.activeNotes.has(midi)) {
+        key.classList.add('active');
+      } else {
+        key.classList.remove('active');
+      }
+    }
+  }
+
+  /* ==========================================================
+     SEEK BAR DENSITY VISUALIZATION
+     ========================================================== */
+  function drawSeekDensity() {
+    const canvas = dom.seekDensityCanvas;
+    const rect = dom.seekContainer.getBoundingClientRect();
+    const dpr = window.devicePixelRatio || 1;
+    canvas.width = rect.width * dpr;
+    canvas.height = rect.height * dpr;
+    canvas.style.width = rect.width + 'px';
+    canvas.style.height = rect.height + 'px';
+
+    const ctx = canvas.getContext('2d');
+    ctx.scale(dpr, dpr);
+    ctx.clearRect(0, 0, rect.width, rect.height);
+
+    if (!state.notes.length || state.totalDuration <= 0) return;
+
+    // Bucket notes into columns
+    const buckets = Math.max(1, Math.floor(rect.width / 2));
+    const density = new Float32Array(buckets);
+    let maxDensity = 0;
+
+    for (const note of state.notes) {
+      const bucket = Math.floor((note.time / state.totalDuration) * buckets);
+      if (bucket >= 0 && bucket < buckets) {
+        density[bucket] += note.velocity;
+        if (density[bucket] > maxDensity) maxDensity = density[bucket];
+      }
+    }
+
+    if (maxDensity === 0) return;
+
+    const barW = rect.width / buckets;
+    ctx.fillStyle = 'rgba(76, 201, 240, 0.25)';
+    for (let i = 0; i < buckets; i++) {
+      const h = (density[i] / maxDensity) * rect.height;
+      ctx.fillRect(i * barW, rect.height - h, barW, h);
+    }
+  }
+
+  /* ==========================================================
+     CANVAS SETUP HELPERS
+     ========================================================== */
+  function setupCanvas(canvas, container) {
+    const dpr = window.devicePixelRatio || 1;
+    const rect = container.getBoundingClientRect();
+    canvas.width = rect.width * dpr;
+    canvas.height = rect.height * dpr;
+    canvas.style.width = rect.width + 'px';
+    canvas.style.height = rect.height + 'px';
+    const ctx = canvas.getContext('2d');
+    ctx.scale(dpr, dpr);
+    return { ctx, w: rect.width, h: rect.height };
+  }
+
+  /* ==========================================================
+     PIANO ROLL RENDERER
+     ========================================================== */
+  function renderPianoRoll(currentTime) {
+    const { ctx, w, h } = setupCanvas(dom.pianoRollCanvas, dom.pianoRollPanel);
+    ctx.clearRect(0, 0, w, h);
+
+    const noteRange = MIDI_NOTE_MAX - MIDI_NOTE_MIN + 1;
+    const noteHeight = h / noteRange;
+    const pps = PIXELS_PER_SECOND * (state.originalBpm / 120);
+
+    // Gutter width for labels
+    const gutterW = 36;
+    const rollW = w - gutterW;
+    const playheadX = gutterW + rollW * PLAYHEAD_X_RATIO;
+
+    // Time range visible
+    const timeLeft = currentTime - (playheadX - gutterW) / pps;
+    const timeRight = currentTime + (w - playheadX) / pps;
+
+    // Draw octave grid lines
+    ctx.strokeStyle = '#2a2a3e';
+    ctx.lineWidth = 1;
+    for (let midi = MIDI_NOTE_MIN; midi <= MIDI_NOTE_MAX; midi++) {
+      if (midi % 12 === 0) {
+        const y = h - (midi - MIDI_NOTE_MIN + 0.5) * noteHeight;
+        ctx.beginPath();
+        ctx.moveTo(gutterW, y);
+        ctx.lineTo(w, y);
+        ctx.stroke();
+      }
+    }
+
+    // Draw gutter labels
+    ctx.fillStyle = '#6c757d';
+    ctx.font = '10px Inter, sans-serif';
+    ctx.textAlign = 'right';
+    ctx.textBaseline = 'middle';
+    for (let midi = MIDI_NOTE_MIN; midi <= MIDI_NOTE_MAX; midi += 12) {
+      const y = h - (midi - MIDI_NOTE_MIN + 0.5) * noteHeight;
+      ctx.fillText(noteName(midi), gutterW - 4, y);
+    }
+
+    // Gutter separator
+    ctx.strokeStyle = '#2a2a3e';
+    ctx.beginPath();
+    ctx.moveTo(gutterW, 0);
+    ctx.lineTo(gutterW, h);
+    ctx.stroke();
+
+    // Draw notes
+    const transpose = state.transpose;
+    for (const note of state.notes) {
+      const noteEnd = note.time + note.duration;
+      if (noteEnd < timeLeft || note.time > timeRight) continue;
+
+      const transposedMidi = note.midi + transpose;
+      if (transposedMidi < MIDI_NOTE_MIN || transposedMidi > MIDI_NOTE_MAX) continue;
+
+      const x = playheadX + (note.time - currentTime) * pps;
+      const noteW = note.duration * pps;
+      const y = h - (transposedMidi - MIDI_NOTE_MIN + 1) * noteHeight;
+
+      const isActive = note.time <= currentTime && noteEnd > currentTime;
+
+      // Color by channel, opacity by velocity
+      const hue = (note.channel * 37) % 360;
+      const alpha = 0.4 + note.velocity * 0.6;
+
+      if (isActive) {
+        ctx.fillStyle = `rgba(76, 201, 240, ${alpha})`;
+        ctx.shadowColor = 'rgba(76, 201, 240, 0.5)';
+        ctx.shadowBlur = 6;
+      } else {
+        ctx.fillStyle = `hsla(${hue}, 70%, 60%, ${alpha})`;
+        ctx.shadowColor = 'transparent';
+        ctx.shadowBlur = 0;
+      }
+
+      const r = Math.min(3, noteHeight / 2, noteW / 2);
+      roundRect(ctx, x, y, Math.max(noteW, 2), noteHeight - 1, r);
+      ctx.fill();
+    }
+    ctx.shadowBlur = 0;
+
+    // Playhead
+    ctx.strokeStyle = '#4cc9f0';
+    ctx.lineWidth = 2;
+    ctx.shadowColor = 'rgba(76, 201, 240, 0.6)';
+    ctx.shadowBlur = 8;
+    ctx.beginPath();
+    ctx.moveTo(playheadX, 0);
+    ctx.lineTo(playheadX, h);
+    ctx.stroke();
+    ctx.shadowBlur = 0;
+  }
+
+  /* ==========================================================
+     WATERFALL RENDERER
+     ========================================================== */
+  function renderWaterfall(currentTime) {
+    const { ctx, w, h } = setupCanvas(dom.waterfallCanvas, dom.waterfallPanel);
+    ctx.clearRect(0, 0, w, h);
+
+    if (!state.notes.length) return;
+
+    const transpose = state.transpose;
+    const pps = WATERFALL_PPS * (state.originalBpm / 120);
+
+    // Time window: notes falling from top, reaching bottom at currentTime
+    const timeTop = currentTime + h / pps;
+    const timeBottom = currentTime;
+
+    // Map pitch to x positions using the piano key positions
+    // We need to get the piano total width and scale it to canvas width
+    const pianoTotalWidth = dom.piano.offsetWidth || 1;
+    const scaleX = w / pianoTotalWidth;
+
+    // Draw octave grid lines (vertical, aligned with C notes)
+    ctx.strokeStyle = '#1a1a2e';
+    ctx.lineWidth = 1;
+    for (let midi = MIDI_NOTE_MIN; midi <= MIDI_NOTE_MAX; midi++) {
+      if (midi % 12 === 0) {
+        const pos = state.keyPositions.get(midi);
+        if (pos) {
+          const x = pos.x * scaleX;
+          ctx.beginPath();
+          ctx.moveTo(x, 0);
+          ctx.lineTo(x, h);
+          ctx.stroke();
+        }
+      }
+    }
+
+    // Draw notes
+    for (const note of state.notes) {
+      const noteEnd = note.time + note.duration;
+      if (noteEnd < timeBottom - 0.5 || note.time > timeTop) continue;
+
+      const transposedMidi = note.midi + transpose;
+      const pos = state.keyPositions.get(transposedMidi);
+      if (!pos) continue;
+
+      const x = pos.x * scaleX;
+      const noteW = pos.w * scaleX;
+
+      // Y: bottom of screen = currentTime, top = currentTime + windowDuration
+      const yBottom = h - (note.time - currentTime) * pps;
+      const yTop = h - (noteEnd - currentTime) * pps;
+      const noteH = yBottom - yTop;
+
+      const isActive = note.time <= currentTime && noteEnd > currentTime;
+
+      const hue = (note.channel * 37) % 360;
+      const alpha = 0.4 + note.velocity * 0.6;
+
+      if (isActive) {
+        ctx.fillStyle = `rgba(76, 201, 240, ${alpha})`;
+        ctx.shadowColor = 'rgba(76, 201, 240, 0.6)';
+        ctx.shadowBlur = 10;
+      } else {
+        ctx.fillStyle = `hsla(${hue}, 70%, 60%, ${alpha})`;
+        ctx.shadowColor = 'transparent';
+        ctx.shadowBlur = 0;
+      }
+
+      const r = Math.min(3, Math.max(noteH, 2) / 2);
+      roundRect(ctx, x, yTop, Math.max(noteW - 1, 2), Math.max(noteH, 2), r);
+      ctx.fill();
+    }
+    ctx.shadowBlur = 0;
+  }
+
+  /* ==========================================================
+     ROUNDED RECT HELPER
+     ========================================================== */
+  function roundRect(ctx, x, y, w, h, r) {
+    if (w < 0 || h < 0) return;
+    r = Math.min(r, w / 2, h / 2);
+    ctx.beginPath();
+    ctx.moveTo(x + r, y);
+    ctx.lineTo(x + w - r, y);
+    ctx.arcTo(x + w, y, x + w, y + r, r);
+    ctx.lineTo(x + w, y + h - r);
+    ctx.arcTo(x + w, y + h, x + w - r, y + h, r);
+    ctx.lineTo(x + r, y + h);
+    ctx.arcTo(x, y + h, x, y + h - r, r);
+    ctx.lineTo(x, y + r);
+    ctx.arcTo(x, y, x + r, y, r);
+    ctx.closePath();
+  }
+
+  /* ==========================================================
+     ANIMATION LOOP
+     ========================================================== */
+  function renderLoop() {
+    const currentTime = transportToMidiTime(Tone.Transport.seconds);
+
+    // Update time display
+    dom.currentTime.textContent = formatTime(currentTime);
+
+    // Update seek bar
+    if (state.totalDuration > 0) {
+      const pct = clamp(currentTime / state.totalDuration, 0, 1) * 100;
+      dom.seekProgress.style.width = pct + '%';
+    }
+
+    // Update active notes
+    state.activeNotes.clear();
+    const transpose = state.transpose;
+    for (const note of state.notes) {
+      if (note.time <= currentTime && note.time + note.duration > currentTime) {
+        const transposed = note.midi + transpose;
+        if (transposed >= MIDI_NOTE_MIN && transposed <= MIDI_NOTE_MAX) {
+          state.activeNotes.add(transposed);
+        }
+      }
+    }
+    updatePianoHighlights();
+
+    // Render canvases
+    renderPianoRoll(currentTime);
+    renderWaterfall(currentTime);
+
+    // Auto-stop at end
+    if (state.isPlaying && currentTime >= state.totalDuration) {
+      stopPlayback();
+    }
+
+    state.animFrameId = requestAnimationFrame(renderLoop);
+  }
+
+  function startRenderLoop() {
+    if (state.animFrameId) return;
+    state.animFrameId = requestAnimationFrame(renderLoop);
+  }
+
+  function stopRenderLoop() {
+    if (state.animFrameId) {
+      cancelAnimationFrame(state.animFrameId);
+      state.animFrameId = null;
+    }
+  }
+
+  /* ==========================================================
+     PLAYBACK CONTROLS
+     ========================================================== */
+  function schedulePart() {
+    if (state.part) {
+      state.part.dispose();
+      state.part = null;
+    }
+
+    const transpose = state.transpose;
+    const ppq = Tone.Transport.PPQ;
+    const ticksPerSecond = (state.originalBpm / 60) * ppq;
+
+    const events = state.notes.map(n => ({
+      timeTicks: Math.round(n.time * ticksPerSecond),
+      midi: n.midi + transpose,
+      duration: n.duration,  // Keep in original seconds for synth
+      velocity: n.velocity,
+    })).filter(n => n.midi >= 0 && n.midi <= 127);
+
+    state.part = new Tone.Part((time, value) => {
+      const freq = midiToFreq(value.midi);
+      // Scale duration by BPM ratio so notes shorten/lengthen with tempo
+      const scaledDuration = value.duration * (state.originalBpm / Tone.Transport.bpm.value);
+      try {
+        state.synth.triggerAttackRelease(freq, scaledDuration, time, value.velocity);
+      } catch (e) {
+        // Ignore polyphony overflow
+      }
+    }, events.map(e => [e.timeTicks + "i", e]));
+
+    state.part.start(0);
+  }
+
+  async function startPlayback() {
+    await ensureAudioContext();
+    if (!state.midi) return;
+
+    if (Tone.Transport.state !== 'started') {
+      schedulePart();
+      Tone.Transport.start();
+    }
+
+    state.isPlaying = true;
+    dom.iconPlay.style.display = 'none';
+    dom.iconPause.style.display = 'block';
+    startRenderLoop();
+  }
+
+  function pausePlayback() {
+    Tone.Transport.pause();
+    state.isPlaying = false;
+    dom.iconPlay.style.display = 'block';
+    dom.iconPause.style.display = 'none';
+  }
+
+  function stopPlayback() {
+    Tone.Transport.stop();
+    Tone.Transport.seconds = 0;
+    if (state.part) {
+      state.part.dispose();
+      state.part = null;
+    }
+    state.isPlaying = false;
+    state.activeNotes.clear();
+    updatePianoHighlights();
+    dom.iconPlay.style.display = 'block';
+    dom.iconPause.style.display = 'none';
+    dom.currentTime.textContent = formatTime(0);
+    dom.seekProgress.style.width = '0%';
+
+    // Render one last frame at 0
+    renderPianoRoll(0);
+    renderWaterfall(0);
+  }
+
+  function seekTo(seconds) {
+    seconds = clamp(seconds, 0, state.totalDuration);
+    const wasPlaying = state.isPlaying;
+    if (wasPlaying) {
+      Tone.Transport.pause();
+      if (state.part) {
+        state.part.dispose();
+        state.part = null;
+      }
+    }
+    Tone.Transport.seconds = midiTimeToTransport(seconds);
+    if (wasPlaying) {
+      schedulePart();
+      Tone.Transport.start();
+    }
+    dom.currentTime.textContent = formatTime(seconds);
+    const pct = state.totalDuration > 0 ? (seconds / state.totalDuration * 100) : 0;
+    dom.seekProgress.style.width = pct + '%';
+  }
+
+  /* ==========================================================
+     MIDI FILE LOADING
+     ========================================================== */
+  async function loadMidiFile(file) {
+    dom.loadingOverlay.classList.remove('hidden');
+
+    try {
+      const arrayBuffer = await file.arrayBuffer();
+      const midi = new Midi(arrayBuffer);
+
+      if (!midi.tracks || midi.tracks.length === 0) {
+        showToast('MIDI file has no tracks.', 'error');
+        dom.loadingOverlay.classList.add('hidden');
+        return;
+      }
+
+      // Stop any current playback
+      stopPlayback();
+      stopRenderLoop();
+
+      state.midi = midi;
+      state.fileName = file.name.replace(/\.(mid|midi)$/i, '');
+
+      // Extract all notes from all tracks
+      state.notes = [];
+      let maxTime = 0;
+
+      for (const track of midi.tracks) {
+        const channel = track.channel || 0;
+        for (const note of track.notes) {
+          state.notes.push({
+            midi: note.midi,
+            time: note.time,
+            duration: note.duration,
+            velocity: note.velocity,
+            channel: channel,
+          });
+          const end = note.time + note.duration;
+          if (end > maxTime) maxTime = end;
+        }
+      }
+
+      state.notes.sort((a, b) => a.time - b.time);
+      state.totalDuration = maxTime;
+
+      if (state.notes.length === 0) {
+        showToast('MIDI file has no note events.', 'error');
+        dom.loadingOverlay.classList.add('hidden');
+        return;
+      }
+
+      // Set BPM from MIDI (use first tempo)
+      const bpm = midi.header.tempos.length > 0 ? Math.round(midi.header.tempos[0].bpm) : 120;
+      const clampedBpm = clamp(bpm, 20, 300);
+      state.originalBpm = clampedBpm;
+      dom.bpmInput.value = clampedBpm;
+      dom.bpmSlider.value = clampedBpm;
+      Tone.Transport.bpm.value = clampedBpm;
+
+      // Update UI
+      dom.totalTime.textContent = formatTime(state.totalDuration);
+      dom.currentTime.textContent = formatTime(0);
+      dom.seekProgress.style.width = '0%';
+
+      // Enable controls
+      dom.btnExport.disabled = false;
+      dom.btnPlay.disabled = false;
+      dom.btnStop.disabled = false;
+      dom.btnRewind.disabled = false;
+
+      // Show visualizers
+      dom.emptyState.classList.add('hidden');
+      dom.visualizers.style.display = 'flex';
+
+      // Create synth
+      createSynth();
+
+      // Draw seek density
+      drawSeekDensity();
+
+      // Scroll piano to center of note range
+      scrollPianoToActiveRange();
+
+      // Start render loop for initial draw
+      startRenderLoop();
+
+      // Render initial frame
+      renderPianoRoll(0);
+      renderWaterfall(0);
+
+      showToast(`Loaded "${file.name}" — ${state.notes.length} notes`, 'success');
+
+    } catch (e) {
+      console.error(e);
+      showToast('Failed to parse MIDI file. Please check the file format.', 'error');
+    } finally {
+      dom.loadingOverlay.classList.add('hidden');
+    }
+  }
+
+  function scrollPianoToActiveRange() {
+    if (state.notes.length === 0) return;
+    let minNote = 127, maxNote = 0;
+    for (const n of state.notes) {
+      if (n.midi < minNote) minNote = n.midi;
+      if (n.midi > maxNote) maxNote = n.midi;
+    }
+    const midNote = Math.floor((minNote + maxNote) / 2);
+    const pos = state.keyPositions.get(clamp(midNote, MIDI_NOTE_MIN, MIDI_NOTE_MAX));
+    if (pos) {
+      const containerW = dom.pianoContainer.offsetWidth;
+      dom.pianoContainer.scrollLeft = pos.x - containerW / 2;
+    }
+  }
+
+  /* ==========================================================
+     MIDI EXPORT
+     ========================================================== */
+  function exportMidi() {
+    if (!state.midi) return;
+
+    try {
+      // Clone by re-parsing the original data
+      const cloned = new Midi(state.midi.toArray());
+      const transpose = state.transpose;
+
+      // Apply transposition
+      for (const track of cloned.tracks) {
+        for (const note of track.notes) {
+          note.midi = clamp(note.midi + transpose, 0, 127);
+        }
+      }
+
+      // Apply current tempo
+      if (cloned.header.tempos.length > 0) {
+        cloned.header.tempos[0].bpm = parseFloat(dom.bpmInput.value) || 120;
+      }
+
+      const data = cloned.toArray();
+      const blob = new Blob([new Uint8Array(data)], { type: 'audio/midi' });
+      const url = URL.createObjectURL(blob);
+
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${state.fileName}-edited.mid`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+
+      showToast('MIDI exported successfully!', 'success');
+    } catch (e) {
+      console.error(e);
+      showToast('Failed to export MIDI file.', 'error');
+    }
+  }
+
+  /* ==========================================================
+     EVENT HANDLERS
+     ========================================================== */
+
+  // File loading
+  dom.btnLoad.addEventListener('click', () => dom.fileInput.click());
+  dom.fileInput.addEventListener('change', (e) => {
+    const file = e.target.files[0];
+    if (file) loadMidiFile(file);
+    e.target.value = ''; // Reset for re-loading same file
+  });
+
+  // Drag and drop on body
+  document.body.addEventListener('dragover', (e) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'copy';
+  });
+  document.body.addEventListener('drop', (e) => {
+    e.preventDefault();
+    const file = e.dataTransfer.files[0];
+    if (file && /\.(mid|midi)$/i.test(file.name)) {
+      loadMidiFile(file);
+    } else if (file) {
+      showToast('Please drop a .mid or .midi file.', 'error');
+    }
+  });
+
+  // Export
+  dom.btnExport.addEventListener('click', exportMidi);
+
+  // Transport
+  dom.btnPlay.addEventListener('click', async () => {
+    if (!state.midi) return;
+    if (state.isPlaying) {
+      pausePlayback();
+    } else {
+      await startPlayback();
+    }
+  });
+
+  dom.btnStop.addEventListener('click', () => {
+    if (!state.midi) return;
+    stopPlayback();
+  });
+
+  dom.btnRewind.addEventListener('click', () => {
+    if (!state.midi) return;
+    seekTo(0);
+  });
+
+  // BPM controls
+  function handleBpmChange(value) {
+    const bpm = clamp(parseInt(value) || 120, 20, 300);
+    dom.bpmInput.value = bpm;
+    dom.bpmSlider.value = bpm;
+
+    clearTimeout(state.bpmDebounceTimer);
+    state.bpmDebounceTimer = setTimeout(() => {
+      Tone.Transport.bpm.value = bpm;
+    }, BPM_DEBOUNCE_MS);
+  }
+
+  dom.bpmInput.addEventListener('input', (e) => handleBpmChange(e.target.value));
+  dom.bpmSlider.addEventListener('input', (e) => handleBpmChange(e.target.value));
+
+  // Transpose
+  dom.transposeSelect.addEventListener('change', (e) => {
+    state.transpose = parseInt(e.target.value) || 0;
+    // Reschedule the part if playing
+    if (state.isPlaying) {
+      const currentTime = Tone.Transport.seconds;
+      Tone.Transport.pause();
+      if (state.part) {
+        state.part.dispose();
+        state.part = null;
+      }
+      schedulePart();
+      Tone.Transport.start();
+    }
+  });
+
+  // Seek bar
+  let isSeeking = false;
+
+  function handleSeek(e) {
+    if (!state.midi) return;
+    const rect = dom.seekContainer.getBoundingClientRect();
+    const ratio = clamp((e.clientX - rect.left) / rect.width, 0, 1);
+    seekTo(ratio * state.totalDuration);
+  }
+
+  dom.seekContainer.addEventListener('mousedown', (e) => {
+    isSeeking = true;
+    handleSeek(e);
+  });
+
+  window.addEventListener('mousemove', (e) => {
+    if (isSeeking) handleSeek(e);
+  });
+
+  window.addEventListener('mouseup', () => {
+    isSeeking = false;
+  });
+
+  // Keyboard shortcuts
+  document.addEventListener('keydown', (e) => {
+    // Ignore if typing in an input
+    if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT') return;
+
+    switch (e.code) {
+      case 'Space':
+        e.preventDefault();
+        dom.btnPlay.click();
+        break;
+      case 'ArrowLeft':
+        e.preventDefault();
+        if (state.midi) seekTo(Tone.Transport.seconds - 5);
+        break;
+      case 'ArrowRight':
+        e.preventDefault();
+        if (state.midi) seekTo(Tone.Transport.seconds + 5);
+        break;
+    }
+  });
+
+  // Resize handling
+  const resizeObserver = new ResizeObserver(() => {
+    drawSeekDensity();
+    if (state.midi) {
+      const t = Tone.Transport.seconds;
+      renderPianoRoll(t);
+      renderWaterfall(t);
+    }
+  });
+
+  resizeObserver.observe(dom.pianoRollPanel);
+  resizeObserver.observe(dom.waterfallPanel);
+  resizeObserver.observe(dom.seekContainer);
+
+  /* ==========================================================
+     INITIALIZATION
+     ========================================================== */
+  buildPiano();
+
+  // Check audio context state on first interaction
+  document.addEventListener('click', async () => {
+    if (Tone.context.state === 'suspended') {
+      await Tone.start();
+    }
+  }, { once: true });
+
+})();
+</script>
+</body>
+</html>
