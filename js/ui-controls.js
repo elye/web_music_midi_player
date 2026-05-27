@@ -282,6 +282,23 @@ export function initControls(dom) {
       await Tone.start();
     }
   }, { once: true });
+
+  // ---- Fullscreen ----
+  dom.btnFullscreen.addEventListener('click', () => {
+    if (!document.fullscreenElement) {
+      document.documentElement.requestFullscreen().catch(() => {});
+    } else {
+      document.exitFullscreen().catch(() => {});
+    }
+  });
+
+  document.addEventListener('fullscreenchange', () => {
+    const isFullscreen = !!document.fullscreenElement;
+    dom.iconFullscreenEnter.style.display = isFullscreen ? 'none' : '';
+    dom.iconFullscreenExit.style.display = isFullscreen ? '' : 'none';
+    dom.btnFullscreen.setAttribute('aria-label', isFullscreen ? 'Exit fullscreen' : 'Toggle fullscreen');
+    dom.btnFullscreen.setAttribute('title', isFullscreen ? 'Exit fullscreen' : 'Toggle fullscreen');
+  });
 }
 
 /**
