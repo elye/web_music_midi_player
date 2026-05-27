@@ -4,15 +4,17 @@ A web-based MIDI visualizer and editor with synchronized playback, dual visualiz
 
 ## What this app does
 
-- Loads MIDI files (.mid, .midi)
+- Loads MIDI files (.mid, .midi) via button click or drag-and-drop
 - Parses notes, tempo, and timing with @tonejs/midi
 - Plays notes with Tone.js and keeps visuals synced to transport time
 - Shows two live visualizers:
-  - Horizontal piano roll
-  - Waterfall/falling notes view
+  - Waterfall/falling notes view (always on)
+  - Horizontal piano roll (toggleable, off by default)
 - Highlights active keys on an 88-key virtual piano
 - Supports live BPM changes and transposition
 - Exports an edited MIDI file with applied tempo and transpose
+  - Uses the native OS save dialog (`showSaveFilePicker`) on supported browsers (Chrome, Edge)
+  - Falls back to standard download on unsupported browsers (Firefox, Safari, mobile)
 
 ## Important: How to run
 
@@ -64,11 +66,24 @@ When the page is opened as file://.../index.html:
 
 With http://localhost, modules load normally and all handlers are attached.
 
+## Deploying
+
+This is a pure static site with no build step. Deploy to Cloudflare Pages:
+
+```bash
+npx wrangler pages deploy . --project-name your-project-name
+```
+
+Or connect your Git repository in the Cloudflare dashboard under **Workers & Pages → Create Application → Pages**, with:
+
+- Build command: *(leave empty)*
+- Build output directory: `/`
+
 ## Controls summary
 
 - File
   - Load MIDI
-  - Export MIDI (enabled after successful load)
+  - Export MIDI — opens native save dialog (enabled after successful load)
 - Transport
   - Rewind
   - Play/Pause
@@ -79,7 +94,20 @@ With http://localhost, modules load normally and all handlers are attached.
 - Transpose
   - -12 to +12 semitones
 - Timeline
-  - Click or drag to seek
+  - Click or drag to seek (mouse and touch)
+- Visualizers
+  - Piano Roll toggle — show/hide the piano roll panel (off by default)
+- View
+  - Fullscreen toggle — enter/exit fullscreen mode
+
+## Piano keyboard
+
+The virtual piano scrolls horizontally when the keyboard is wider than the viewport.
+
+- **Desktop**: click and drag left/right to scroll
+- **Mobile**: swipe left/right to scroll
+
+The waterfall visualizer stays aligned with the visible keyboard region as you scroll.
 
 ## Keyboard shortcuts
 
@@ -98,6 +126,11 @@ With http://localhost, modules load normally and all handlers are attached.
 ### No sound
 
 - Click in the page to unlock audio context (browser autoplay policy)
+
+### Export dialog does not appear
+
+- `showSaveFilePicker` requires a secure context (HTTPS or localhost)
+- On unsupported browsers the file downloads automatically to the default downloads folder
 - Ensure your system output device is active
 
 ### Visuals not updating
