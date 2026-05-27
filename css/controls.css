@@ -157,17 +157,10 @@ input[type="range"]:focus-visible {
 }
 
 #sound-settings-wrap {
-  display: flex;
-  flex-direction: column;
-  gap: var(--sp-2);
-  padding: var(--sp-2) var(--sp-4);
+  padding: 0 var(--sp-4) var(--sp-2);
   background: var(--bg-secondary);
   border-bottom: 1px solid var(--border);
   flex-shrink: 0;
-}
-
-#btn-sound-advanced {
-  align-self: flex-start;
 }
 
 #sound-settings-panel {
