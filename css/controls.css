@@ -272,6 +272,12 @@ input[type="range"]:focus-visible {
   transition: none;
 }
 
+button[aria-pressed="true"] {
+  background: var(--accent, #89b4fa);
+  color: #1e1e2e;
+  border-color: var(--accent, #89b4fa);
+}
+
 /* Responsive */
 @media (max-width: 900px) {
   #header {

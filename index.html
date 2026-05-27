@@ -137,6 +137,16 @@
 
   <div class="separator"></div>
 
+  <div class="separator"></div>
+        <button id="btn-toggle-piano-roll" class="secondary" aria-label="Show piano roll" title="Show piano roll" aria-pressed="false">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="2" y="3" width="20" height="14" rx="2"></rect>
+            <line x1="8" y1="21" x2="16" y2="21"></line>
+            <line x1="12" y1="17" x2="12" y2="21"></line>
+          </svg>
+          Piano Roll
+        </button>
+
   <button id="btn-sound-advanced" class="secondary" type="button" aria-expanded="false" aria-controls="sound-settings-panel">
     Advanced Sound
   </button>
@@ -226,7 +236,7 @@
 
   <!-- Visualizers -->
   <div id="visualizers" style="display:none;">
-    <div class="viz-panel" id="piano-roll-panel">
+    <div class="viz-panel hidden" id="piano-roll-panel">
       <canvas id="piano-roll-canvas"></canvas>
     </div>
     <div class="viz-panel" id="waterfall-panel">

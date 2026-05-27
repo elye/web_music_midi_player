@@ -82,6 +82,14 @@ export function initControls(dom) {
     setSoundPanelExpanded(dom, !isExpanded);
   });
 
+  // ---- Piano Roll toggle ----
+  dom.btnTogglePianoRoll.addEventListener('click', () => {
+    const isHidden = dom.pianoRollPanel.classList.toggle('hidden');
+    dom.btnTogglePianoRoll.setAttribute('aria-pressed', String(!isHidden));
+    dom.btnTogglePianoRoll.setAttribute('aria-label', isHidden ? 'Show piano roll' : 'Hide piano roll');
+    dom.btnTogglePianoRoll.setAttribute('title', isHidden ? 'Show piano roll' : 'Hide piano roll');
+  });
+
   dom.soundOscType.addEventListener('change', (e) => {
     updateSynthSettings({ oscillator: e.target.value });
     syncSoundControls(dom);

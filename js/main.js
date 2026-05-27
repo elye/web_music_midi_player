@@ -39,6 +39,7 @@ const dom = {
   loadingOverlay:   document.getElementById('loading-overlay'),
   visualizers:      document.getElementById('visualizers'),
   pianoRollPanel:   document.getElementById('piano-roll-panel'),
+  btnTogglePianoRoll: document.getElementById('btn-toggle-piano-roll'),
   pianoRollCanvas:  document.getElementById('piano-roll-canvas'),
   waterfallPanel:   document.getElementById('waterfall-panel'),
   waterfallCanvas:  document.getElementById('waterfall-canvas'),
