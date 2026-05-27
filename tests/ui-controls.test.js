@@ -20,6 +20,8 @@ function makeDom() {
   const countInOverlay = document.createElement('div');
   const countInBeat = document.createElement('div');
   const btnSoundAdvanced = document.createElement('button');
+  const soundPreset = document.createElement('select');
+  soundPreset.innerHTML = '<option value="">— Preset —</option><option value="Piano">Piano</option>';
   const soundPanel = document.createElement('div');
   const soundOscType = document.createElement('select');
   soundOscType.innerHTML = '<option value="sine">sine</option><option value="triangle">triangle</option>';
@@ -61,6 +63,7 @@ function makeDom() {
     countInOverlay,
     countInBeat,
     btnSoundAdvanced,
+    soundPreset,
     soundPanel,
     soundOscType,
     soundAttack,
@@ -109,9 +112,12 @@ function resetStateForTest() {
 
 beforeEach(() => {
   resetStateForTest();
+  const mockSynth = { dispose: vi.fn(), toDestination() { return this; } };
   globalThis.Tone = {
     context: { state: 'running' },
     start: vi.fn(async () => {}),
+    Synth: function Synth() {},
+    PolySynth: vi.fn(() => mockSynth),
     Transport: {
       state: 'stopped',
       bpm: { value: 120 },

@@ -49,6 +49,7 @@ const dom = {
   countInOverlay:   document.getElementById('count-in-overlay'),
   countInBeat:      document.getElementById('count-in-beat'),
   btnSoundAdvanced: document.getElementById('btn-sound-advanced'),
+  soundPreset:      document.getElementById('sound-preset'),
   soundPanel:       document.getElementById('sound-settings-panel'),
   soundOscType:     document.getElementById('sound-osc-type'),
   soundAttack:      document.getElementById('sound-attack'),

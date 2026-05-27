@@ -16,6 +16,14 @@ import { buildPiano, scrollPianoToActiveRange } from './piano-keyboard.js';
 import { createSynth } from './audio-engine.js';
 import { drawSeekDensity, initSeekInteraction } from './seek-bar.js';
 
+const SOUND_PRESETS = {
+  Piano:   { oscillator: 'triangle', attack: 0.001, decay: 1.5,  sustain: 0,    release: 1.2,  volume: -6  },
+  Organ:   { oscillator: 'sine',     attack: 0.015, decay: 0.05, sustain: 0.85, release: 0.15, volume: -9  },
+  Guitar:  { oscillator: 'triangle', attack: 0.004, decay: 0.85, sustain: 0,    release: 0.12, volume: -10 },
+  Brass:   { oscillator: 'sawtooth', attack: 0.002, decay: 0.18, sustain: 0.7,  release: 0.25, volume: -9  },
+  Digital: { oscillator: 'square',   attack: 0.006, decay: 0.12, sustain: 0.5,  release: 0.35, volume: -6  },
+};
+
 const SOUND_LIMITS = {
   attack: { min: 0.001, max: 0.1, digits: 3 },
   decay: { min: 0.05, max: 2, digits: 2 },
@@ -55,8 +63,19 @@ function syncSoundControls(dom) {
  * @param {Object} dom — map of DOM element references
  */
 export function initControls(dom) {
+  // Apply Piano preset as default, then sync controls
+  updateSynthSettings(SOUND_PRESETS.Piano);
+  dom.soundPreset.value = 'Piano';
   setSoundPanelExpanded(dom, false);
   syncSoundControls(dom);
+
+  dom.soundPreset.addEventListener('change', (e) => {
+    const preset = SOUND_PRESETS[e.target.value];
+    if (preset) {
+      updateSynthSettings(preset);
+      syncSoundControls(dom);
+    }
+  });
 
   dom.btnSoundAdvanced.addEventListener('click', () => {
     const isExpanded = dom.btnSoundAdvanced.getAttribute('aria-expanded') === 'true';
