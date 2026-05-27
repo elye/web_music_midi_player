@@ -202,6 +202,26 @@ export function initControls(dom) {
   }, { once: true });
 }
 
+function resetRuntimeControlsForNewFile(dom) {
+  const bpm = state.originalBpm;
+
+  // Cancel pending BPM writes from the previous session.
+  clearTimeout(state.bpmDebounceTimer);
+  state.bpmDebounceTimer = null;
+
+  dom.bpmInput.value = bpm;
+  dom.bpmSlider.value = bpm;
+  Tone.Transport.bpm.value = bpm;
+
+  state.transpose = 0;
+  dom.transposeSelect.value = '0';
+
+  dom.countInInput.value = '0';
+  state.countingIn = false;
+  dom.countInOverlay.classList.add('hidden');
+  dom.countInBeat.textContent = '';
+}
+
 /* ----------------------------------------------------------
    File load handler (orchestrates all modules)
    ---------------------------------------------------------- */
@@ -218,11 +238,9 @@ async function handleFileLoad(file, dom) {
     return;
   }
 
-  // Set BPM
-  const bpm = state.originalBpm;
-  dom.bpmInput.value = bpm;
-  dom.bpmSlider.value = bpm;
-  Tone.Transport.bpm.value = bpm;
+  // Re-assert a clean transport state after async parse work completes.
+  stopPlayback();
+  resetRuntimeControlsForNewFile(dom);
 
   // Update time display
   dom.totalTime.textContent = formatTime(state.totalDuration);
