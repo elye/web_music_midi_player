@@ -120,11 +120,7 @@ export function initControls(dom) {
   dom.btnReset.addEventListener('click', () => {
     if (!state.midi) return;
     const bpm = state.originalBpm;
-    dom.bpmInput.value = bpm;
-    dom.bpmSlider.value = bpm;
-    Tone.Transport.bpm.value = bpm;
-    state.transpose = 0;
-    dom.transposeSelect.value = '0';
+    resetBpmAndTranspose(bpm, dom);
 
     if (state.isPlaying) {
       Tone.Transport.pause();
@@ -202,19 +198,26 @@ export function initControls(dom) {
   }, { once: true });
 }
 
-function resetRuntimeControlsForNewFile(dom) {
-  const bpm = state.originalBpm;
-
-  // Cancel pending BPM writes from the previous session.
+/**
+ * Reset BPM and transpose state/UI to defaults.
+ * @param {number} newBpm — BPM value to set
+ * @param {Object} dom — map of DOM element references
+ */
+function resetBpmAndTranspose(newBpm, dom) {
   clearTimeout(state.bpmDebounceTimer);
   state.bpmDebounceTimer = null;
 
-  dom.bpmInput.value = bpm;
-  dom.bpmSlider.value = bpm;
-  Tone.Transport.bpm.value = bpm;
+  dom.bpmInput.value = newBpm;
+  dom.bpmSlider.value = newBpm;
+  Tone.Transport.bpm.value = newBpm;
 
   state.transpose = 0;
   dom.transposeSelect.value = '0';
+}
+
+function resetRuntimeControlsForNewFile(dom) {
+  const bpm = state.originalBpm;
+  resetBpmAndTranspose(bpm, dom);
 
   dom.countInInput.value = '0';
   state.countingIn = false;
