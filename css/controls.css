@@ -119,9 +119,15 @@ input[type="range"]:focus-visible {
   align-items: center;
   gap: var(--sp-5);
   flex-shrink: 0;
+  flex-wrap: nowrap;
+  overflow-x: auto;
   backdrop-filter: blur(10px);
   z-index: 10;
 }
+
+#header::-webkit-scrollbar { height: 4px; }
+#header::-webkit-scrollbar-thumb { background: #44475a; border-radius: 2px; }
+#header::-webkit-scrollbar-track { background: transparent; }
 
 .control-group {
   display: flex;
@@ -266,10 +272,16 @@ input[type="range"]:focus-visible {
   transition: none;
 }
 
+button[aria-pressed="true"] {
+  background: var(--accent, #89b4fa);
+  color: #1e1e2e;
+  border-color: var(--accent, #89b4fa);
+}
+
 /* Responsive */
 @media (max-width: 900px) {
   #header {
-    flex-wrap: wrap;
+    flex-wrap: nowrap;
     gap: var(--sp-3);
   }
   #sound-settings-wrap {

@@ -98,4 +98,29 @@ describe('initSeekInteraction', () => {
 
     expect(seekTo).not.toHaveBeenCalled();
   });
+
+  it('seeks on touch start and while dragging', () => {
+    const container = document.createElement('div');
+    container.getBoundingClientRect = () => ({ left: 100, width: 200 });
+
+    initSeekInteraction(container);
+
+    container.dispatchEvent(new TouchEvent('touchstart', {
+      touches: [{ clientX: 200 }],
+      cancelable: true,
+    }));
+    container.dispatchEvent(new TouchEvent('touchmove', {
+      touches: [{ clientX: 250 }],
+      cancelable: true,
+    }));
+    container.dispatchEvent(new TouchEvent('touchend', {}));
+    container.dispatchEvent(new TouchEvent('touchmove', {
+      touches: [{ clientX: 260 }],
+      cancelable: true,
+    }));
+
+    expect(seekTo).toHaveBeenCalledTimes(2);
+    expect(seekTo).toHaveBeenNthCalledWith(1, 50);
+    expect(seekTo).toHaveBeenNthCalledWith(2, 75);
+  });
 });

@@ -66,6 +66,10 @@
   border-bottom: 1px solid var(--border);
 }
 
+.viz-panel.hidden {
+  display: none;
+}
+
 .viz-panel canvas {
   position: absolute;
   inset: 0;

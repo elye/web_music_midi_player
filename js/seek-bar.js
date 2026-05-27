@@ -70,4 +70,29 @@ export function initSeekInteraction(containerEl) {
   window.addEventListener('mouseup', () => {
     isSeeking = false;
   });
+
+  // Touch support for mobile
+  containerEl.addEventListener('touchstart', (e) => {
+    isSeeking = true;
+    const touch = e.touches[0];
+    if (!state.midi) return;
+    const rect = containerEl.getBoundingClientRect();
+    const ratio = clamp((touch.clientX - rect.left) / rect.width, 0, 1);
+    seekTo(ratio * state.totalDuration);
+    e.preventDefault();
+  }, { passive: false });
+
+  containerEl.addEventListener('touchmove', (e) => {
+    if (!isSeeking) return;
+    const touch = e.touches[0];
+    if (!state.midi) return;
+    const rect = containerEl.getBoundingClientRect();
+    const ratio = clamp((touch.clientX - rect.left) / rect.width, 0, 1);
+    seekTo(ratio * state.totalDuration);
+    e.preventDefault();
+  }, { passive: false });
+
+  containerEl.addEventListener('touchend', () => {
+    isSeeking = false;
+  });
 }

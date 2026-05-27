@@ -82,6 +82,14 @@ export function initControls(dom) {
     setSoundPanelExpanded(dom, !isExpanded);
   });
 
+  // ---- Piano Roll toggle ----
+  dom.btnTogglePianoRoll.addEventListener('click', () => {
+    const isHidden = dom.pianoRollPanel.classList.toggle('hidden');
+    dom.btnTogglePianoRoll.setAttribute('aria-pressed', String(!isHidden));
+    dom.btnTogglePianoRoll.setAttribute('aria-label', isHidden ? 'Show piano roll' : 'Hide piano roll');
+    dom.btnTogglePianoRoll.setAttribute('title', isHidden ? 'Show piano roll' : 'Hide piano roll');
+  });
+
   dom.soundOscType.addEventListener('change', (e) => {
     updateSynthSettings({ oscillator: e.target.value });
     syncSoundControls(dom);
@@ -282,6 +290,23 @@ export function initControls(dom) {
       await Tone.start();
     }
   }, { once: true });
+
+  // ---- Fullscreen ----
+  dom.btnFullscreen.addEventListener('click', () => {
+    if (!document.fullscreenElement) {
+      document.documentElement.requestFullscreen().catch(() => {});
+    } else {
+      document.exitFullscreen().catch(() => {});
+    }
+  });
+
+  document.addEventListener('fullscreenchange', () => {
+    const isFullscreen = !!document.fullscreenElement;
+    dom.iconFullscreenEnter.style.display = isFullscreen ? 'none' : '';
+    dom.iconFullscreenExit.style.display = isFullscreen ? '' : 'none';
+    dom.btnFullscreen.setAttribute('aria-label', isFullscreen ? 'Exit fullscreen' : 'Toggle fullscreen');
+    dom.btnFullscreen.setAttribute('title', isFullscreen ? 'Exit fullscreen' : 'Toggle fullscreen');
+  });
 }
 
 /**
