@@ -133,7 +133,7 @@ export function initControls(dom) {
 
   // ---- Export ----
   dom.btnExport.addEventListener('click', () => {
-    exportMidi(parseFloat(dom.bpmInput.value) || 120);
+    exportMidi(parseFloat(dom.bpmInput.value) || 120).catch(() => {});
   });
 
   // ---- Transport ----

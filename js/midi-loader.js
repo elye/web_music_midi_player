@@ -64,7 +64,7 @@ export async function parseMidiFile(file) {
 }
 
 /** Export the current MIDI with applied transposition & tempo */
-export function exportMidi(currentBpm) {
+export async function exportMidi(currentBpm, customFileName) {
   if (!state.midi) return;
 
   try {
@@ -81,20 +81,35 @@ export function exportMidi(currentBpm) {
       cloned.header.tempos[0].bpm = currentBpm;
     }
 
+    const baseName = customFileName || `${state.fileName}-edited`;
+    const fileName = baseName.endsWith('.mid') ? baseName : `${baseName}.mid`;
     const data = cloned.toArray();
-    const blob = new Blob([new Uint8Array(data)], { type: 'audio/midi' });
-    const url = URL.createObjectURL(blob);
+    const uint8 = new Uint8Array(data);
 
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `${state.fileName}-edited.mid`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
+    if (typeof window.showSaveFilePicker === 'function') {
+      const fileHandle = await window.showSaveFilePicker({
+        suggestedName: fileName,
+        types: [{ description: 'MIDI File', accept: { 'audio/midi': ['.mid', '.midi'] } }],
+      });
+      const writable = await fileHandle.createWritable();
+      await writable.write(uint8);
+      await writable.close();
+    } else {
+      // Fallback for browsers without File System Access API
+      const blob = new Blob([uint8], { type: 'audio/midi' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = fileName;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }
 
     showToast('MIDI exported successfully!', 'success');
   } catch (e) {
+    if (e.name === 'AbortError') return; // User cancelled the picker — do nothing
     console.error(e);
     showToast('Failed to export MIDI file.', 'error');
   }

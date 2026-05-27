@@ -60,8 +60,8 @@ const dom = {
   soundSustainValue:document.getElementById('sound-sustain-value'),
   soundRelease:     document.getElementById('sound-release'),
   soundReleaseValue:document.getElementById('sound-release-value'),
-  soundVolume:      document.getElementById('sound-volume'),
-  soundVolumeValue: document.getElementById('sound-volume-value'),
+  soundVolume:           document.getElementById('sound-volume'),
+  soundVolumeValue:      document.getElementById('sound-volume-value'),
 };
 
 /* ==========================================================
