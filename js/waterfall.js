@@ -26,8 +26,12 @@ export function renderWaterfall(canvas, container, pianoEl, currentTime) {
   const timeBottom = currentTime;
 
   const pianoTotalWidth = pianoEl.offsetWidth || 1;
-  // When the piano is centered (margin: 0 auto), offset notes to match
-  const offsetX = (w - pianoTotalWidth) / 2;
+  const pianoContainer = pianoEl.parentElement;
+  const scrollLeft = (pianoContainer && pianoTotalWidth > w) ? pianoContainer.scrollLeft : 0;
+  // When piano fits: center it. When piano is wider: align to scroll position.
+  const offsetX = pianoTotalWidth <= w
+    ? (w - pianoTotalWidth) / 2
+    : -scrollLeft;
 
   // Octave grid lines (vertical)
   ctx.strokeStyle = '#1a1a2e';

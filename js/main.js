@@ -132,6 +132,13 @@ initToast(dom.toastContainer);
 buildPiano(dom.piano);
 initControls(dom);
 
+dom.pianoContainer.addEventListener('scroll', () => {
+  if (state.midi) {
+    const t = transportToMidiTime(Tone.Transport.seconds);
+    renderWaterfall(dom.waterfallCanvas, dom.waterfallPanel, dom.piano, t);
+  }
+});
+
 resizeObserver.observe(dom.pianoRollPanel);
 resizeObserver.observe(dom.waterfallPanel);
 resizeObserver.observe(dom.seekContainer);
