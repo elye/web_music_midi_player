@@ -22,15 +22,36 @@ Because of browser security rules, opening index.html directly with file:// can 
 
 Use a local server instead.
 
-### Recommended quick start
+### Quick start
 
-From this folder:
+Option 1: npm
 
+```bash
+npm install
+npm start
+```
+
+Option 2: Python
+
+```bash
 python3 -m http.server 8765
+```
 
 Then open:
 
 http://localhost:8765/
+
+### Running tests
+
+The app runtime still uses a local HTTP server.
+
+`npm` is only used for unit tests:
+
+```bash
+npm install
+npm test
+npm run test:run
+```
 
 ## Why direct file opening can fail
 

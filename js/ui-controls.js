@@ -203,7 +203,7 @@ export function initControls(dom) {
  * @param {number} newBpm — BPM value to set
  * @param {Object} dom — map of DOM element references
  */
-function resetBpmAndTranspose(newBpm, dom) {
+export function resetBpmAndTranspose(newBpm, dom) {
   clearTimeout(state.bpmDebounceTimer);
   state.bpmDebounceTimer = null;
 
@@ -215,7 +215,7 @@ function resetBpmAndTranspose(newBpm, dom) {
   dom.transposeSelect.value = '0';
 }
 
-function resetRuntimeControlsForNewFile(dom) {
+export function resetRuntimeControlsForNewFile(dom) {
   const bpm = state.originalBpm;
   resetBpmAndTranspose(bpm, dom);
 
