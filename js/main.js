@@ -48,6 +48,20 @@ const dom = {
   countInInput:     document.getElementById('count-in-input'),
   countInOverlay:   document.getElementById('count-in-overlay'),
   countInBeat:      document.getElementById('count-in-beat'),
+  btnSoundAdvanced: document.getElementById('btn-sound-advanced'),
+  soundPreset:      document.getElementById('sound-preset'),
+  soundPanel:       document.getElementById('sound-settings-panel'),
+  soundOscType:     document.getElementById('sound-osc-type'),
+  soundAttack:      document.getElementById('sound-attack'),
+  soundAttackValue: document.getElementById('sound-attack-value'),
+  soundDecay:       document.getElementById('sound-decay'),
+  soundDecayValue:  document.getElementById('sound-decay-value'),
+  soundSustain:     document.getElementById('sound-sustain'),
+  soundSustainValue:document.getElementById('sound-sustain-value'),
+  soundRelease:     document.getElementById('sound-release'),
+  soundReleaseValue:document.getElementById('sound-release-value'),
+  soundVolume:      document.getElementById('sound-volume'),
+  soundVolumeValue: document.getElementById('sound-volume-value'),
 };
 
 /* ==========================================================

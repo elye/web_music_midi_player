@@ -19,6 +19,22 @@ function makeDom() {
   const countInInput = document.createElement('input');
   const countInOverlay = document.createElement('div');
   const countInBeat = document.createElement('div');
+  const btnSoundAdvanced = document.createElement('button');
+  const soundPreset = document.createElement('select');
+  soundPreset.innerHTML = '<option value="">— Preset —</option><option value="Piano">Piano</option>';
+  const soundPanel = document.createElement('div');
+  const soundOscType = document.createElement('select');
+  soundOscType.innerHTML = '<option value="sine">sine</option><option value="triangle">triangle</option>';
+  const soundAttack = document.createElement('input');
+  const soundAttackValue = document.createElement('span');
+  const soundDecay = document.createElement('input');
+  const soundDecayValue = document.createElement('span');
+  const soundSustain = document.createElement('input');
+  const soundSustainValue = document.createElement('span');
+  const soundRelease = document.createElement('input');
+  const soundReleaseValue = document.createElement('span');
+  const soundVolume = document.createElement('input');
+  const soundVolumeValue = document.createElement('span');
   const seekContainer = document.createElement('div');
   const iconPlay = document.createElement('div');
   const iconPause = document.createElement('div');
@@ -46,6 +62,20 @@ function makeDom() {
     countInInput,
     countInOverlay,
     countInBeat,
+    btnSoundAdvanced,
+    soundPreset,
+    soundPanel,
+    soundOscType,
+    soundAttack,
+    soundAttackValue,
+    soundDecay,
+    soundDecayValue,
+    soundSustain,
+    soundSustainValue,
+    soundRelease,
+    soundReleaseValue,
+    soundVolume,
+    soundVolumeValue,
     seekContainer,
     iconPlay,
     iconPause,
@@ -70,13 +100,24 @@ function resetStateForTest() {
   state.totalDuration = 0;
   state.part = null;
   state.bpmDebounceTimer = null;
+  state.synthSettings = {
+    oscillator: 'sine',
+    attack: 0.003,
+    decay: 0.35,
+    sustain: 0,
+    release: 0.6,
+    volume: -11,
+  };
 }
 
 beforeEach(() => {
   resetStateForTest();
+  const mockSynth = { dispose: vi.fn(), toDestination() { return this; } };
   globalThis.Tone = {
     context: { state: 'running' },
     start: vi.fn(async () => {}),
+    Synth: function Synth() {},
+    PolySynth: vi.fn(() => mockSynth),
     Transport: {
       state: 'stopped',
       bpm: { value: 120 },

@@ -9,18 +9,104 @@ import { BPM_DEBOUNCE_MS } from './constants.js';
 import {
   startPlayback, pausePlayback, stopPlayback, seekTo,
   schedulePart, performCountIn, ensureAudioContext,
-  transportToMidiTime,
+  transportToMidiTime, updateSynthSettings,
 } from './audio-engine.js';
 import { exportMidi, parseMidiFile } from './midi-loader.js';
 import { buildPiano, scrollPianoToActiveRange } from './piano-keyboard.js';
 import { createSynth } from './audio-engine.js';
 import { drawSeekDensity, initSeekInteraction } from './seek-bar.js';
 
+const SOUND_PRESETS = {
+  Piano:   { oscillator: 'triangle', attack: 0.001, decay: 1.5,  sustain: 0,    release: 1.2,  volume: -6  },
+  Organ:   { oscillator: 'sine',     attack: 0.015, decay: 0.05, sustain: 0.85, release: 0.15, volume: -9  },
+  Guitar:  { oscillator: 'triangle', attack: 0.004, decay: 0.85, sustain: 0,    release: 0.12, volume: -10 },
+  Brass:   { oscillator: 'sawtooth', attack: 0.002, decay: 0.18, sustain: 0.7,  release: 0.25, volume: -9  },
+  Digital: { oscillator: 'square',   attack: 0.006, decay: 0.12, sustain: 0.5,  release: 0.35, volume: -6  },
+};
+
+const SOUND_LIMITS = {
+  attack: { min: 0.001, max: 0.1, digits: 3 },
+  decay: { min: 0.05, max: 2, digits: 2 },
+  sustain: { min: 0, max: 0.9, digits: 2 },
+  release: { min: 0.05, max: 2, digits: 2 },
+  volume: { min: -24, max: 0, digits: 0 },
+};
+
+function formatSynthNumber(value, digits) {
+  if (digits === 0) return String(Math.round(value));
+  return Number(value).toFixed(digits);
+}
+
+function setSoundPanelExpanded(dom, expanded) {
+  dom.soundPanel.classList.toggle('hidden', !expanded);
+  dom.btnSoundAdvanced.setAttribute('aria-expanded', String(expanded));
+}
+
+function syncSoundControls(dom) {
+  const s = state.synthSettings;
+  dom.soundOscType.value = s.oscillator;
+  dom.soundAttack.value = s.attack;
+  dom.soundDecay.value = s.decay;
+  dom.soundSustain.value = s.sustain;
+  dom.soundRelease.value = s.release;
+  dom.soundVolume.value = s.volume;
+
+  dom.soundAttackValue.textContent = formatSynthNumber(s.attack, SOUND_LIMITS.attack.digits) + ' s';
+  dom.soundDecayValue.textContent = formatSynthNumber(s.decay, SOUND_LIMITS.decay.digits) + ' s';
+  dom.soundSustainValue.textContent = formatSynthNumber(s.sustain, SOUND_LIMITS.sustain.digits);
+  dom.soundReleaseValue.textContent = formatSynthNumber(s.release, SOUND_LIMITS.release.digits) + ' s';
+  dom.soundVolumeValue.textContent = formatSynthNumber(s.volume, SOUND_LIMITS.volume.digits) + ' dB';
+}
+
 /**
  * Wire up all header controls and keyboard shortcuts.
  * @param {Object} dom — map of DOM element references
  */
 export function initControls(dom) {
+  // Apply Piano preset as default, then sync controls
+  updateSynthSettings(SOUND_PRESETS.Piano);
+  dom.soundPreset.value = 'Piano';
+  setSoundPanelExpanded(dom, false);
+  syncSoundControls(dom);
+
+  dom.soundPreset.addEventListener('change', (e) => {
+    const preset = SOUND_PRESETS[e.target.value];
+    if (preset) {
+      updateSynthSettings(preset);
+      syncSoundControls(dom);
+    }
+  });
+
+  dom.btnSoundAdvanced.addEventListener('click', () => {
+    const isExpanded = dom.btnSoundAdvanced.getAttribute('aria-expanded') === 'true';
+    setSoundPanelExpanded(dom, !isExpanded);
+  });
+
+  dom.soundOscType.addEventListener('change', (e) => {
+    updateSynthSettings({ oscillator: e.target.value });
+    syncSoundControls(dom);
+  });
+
+  const bindSoundSlider = (inputEl, valueEl, key) => {
+    const { min, max, digits } = SOUND_LIMITS[key];
+    inputEl.addEventListener('input', (e) => {
+      const next = clamp(parseFloat(e.target.value), min, max);
+      updateSynthSettings({ [key]: next });
+      valueEl.textContent = key === 'volume'
+        ? formatSynthNumber(state.synthSettings[key], digits) + ' dB'
+        : (key === 'sustain'
+          ? formatSynthNumber(state.synthSettings[key], digits)
+          : formatSynthNumber(state.synthSettings[key], digits) + ' s');
+      inputEl.value = state.synthSettings[key];
+    });
+  };
+
+  bindSoundSlider(dom.soundAttack, dom.soundAttackValue, 'attack');
+  bindSoundSlider(dom.soundDecay, dom.soundDecayValue, 'decay');
+  bindSoundSlider(dom.soundSustain, dom.soundSustainValue, 'sustain');
+  bindSoundSlider(dom.soundRelease, dom.soundReleaseValue, 'release');
+  bindSoundSlider(dom.soundVolume, dom.soundVolumeValue, 'volume');
+
   // ---- File loading ----
   dom.btnLoad.addEventListener('click', () => dom.fileInput.click());
 
