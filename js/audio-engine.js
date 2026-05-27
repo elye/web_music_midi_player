@@ -5,6 +5,20 @@
 import state from './state.js';
 import { clamp, midiToFreq } from './utils.js';
 
+const ALLOWED_OSCILLATORS = new Set(['sine', 'triangle', 'sawtooth', 'square']);
+
+function normalizeSynthSettings(raw) {
+  const oscillator = ALLOWED_OSCILLATORS.has(raw.oscillator) ? raw.oscillator : 'sine';
+  return {
+    oscillator,
+    attack: clamp(Number(raw.attack), 0.001, 0.1),
+    decay: clamp(Number(raw.decay), 0.05, 2),
+    sustain: clamp(Number(raw.sustain), 0, 0.9),
+    release: clamp(Number(raw.release), 0.05, 2),
+    volume: clamp(Number(raw.volume), -24, 0),
+  };
+}
+
 /** Convert MIDI time (seconds at original BPM) → Transport seconds */
 export function midiTimeToTransport(midiTime) {
   return midiTime * (state.originalBpm / Tone.Transport.bpm.value);
@@ -37,15 +51,46 @@ export function createSynth() {
   if (state.synth) {
     state.synth.dispose();
   }
+  const synthSettings = normalizeSynthSettings(state.synthSettings);
+  state.synthSettings = synthSettings;
+
   state.synth = new Tone.PolySynth(Tone.Synth, {
-    maxPolyphony: 64,
-    voice: Tone.Synth,
-    options: {
-      oscillator: { type: 'sine' },
-      envelope: { attack: 0.003, decay: 0.35, sustain: 0, release: 0.6 },
-      volume: -11,
+    oscillator: { type: synthSettings.oscillator },
+    envelope: {
+      attack: synthSettings.attack,
+      decay: synthSettings.decay,
+      sustain: synthSettings.sustain,
+      release: synthSettings.release,
     },
+    volume: synthSettings.volume,
+    maxPolyphony: 64,
   }).toDestination();
+}
+
+/** Update synth settings with bounded values and rebuild synth if needed. */
+export function updateSynthSettings(partialSettings) {
+  state.synthSettings = normalizeSynthSettings({
+    ...state.synthSettings,
+    ...partialSettings,
+  });
+
+  const wasPlaying = state.isPlaying && !!state.synth;
+  if (wasPlaying) {
+    Tone.Transport.pause();
+  }
+
+  createSynth();
+
+  if (wasPlaying) {
+    if (state.part) {
+      state.part.dispose();
+      state.part = null;
+    }
+    schedulePart();
+    Tone.Transport.start();
+  }
+
+  return state.synthSettings;
 }
 
 /** Schedule all notes as a Tone.Part using tick-based timing */

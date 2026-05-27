@@ -23,6 +23,14 @@ class StateStore {
     // Audio references (managed by AudioEngine)
     this.synth = null;
     this.part = null;
+    this.synthSettings = {
+      oscillator: 'sine',
+      attack: 0.003,
+      decay: 0.35,
+      sustain: 0,
+      release: 0.6,
+      volume: -11,
+    };
 
     // Active notes for visualization
     this.activeNotes = new Set();

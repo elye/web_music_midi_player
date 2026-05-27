@@ -121,6 +121,54 @@
   </div>
 </div>
 
+<div id="sound-settings-wrap">
+  <button id="btn-sound-advanced" class="secondary" type="button" aria-expanded="false" aria-controls="sound-settings-panel">
+    Advanced Sound
+  </button>
+
+  <div id="sound-settings-panel" class="hidden" aria-label="Advanced sound settings">
+    <div class="sound-control-row">
+      <label for="sound-osc-type">Oscillator</label>
+      <select id="sound-osc-type" aria-label="Oscillator type">
+        <option value="sine" selected>Sine</option>
+        <option value="triangle">Triangle</option>
+        <option value="sawtooth">Sawtooth</option>
+        <option value="square">Square</option>
+      </select>
+    </div>
+
+    <div class="sound-control-row">
+      <label for="sound-attack">Attack (0.001-0.1s)</label>
+      <input id="sound-attack" type="range" min="0.001" max="0.1" step="0.001" value="0.003" aria-label="Envelope attack">
+      <span id="sound-attack-value">0.003 s</span>
+    </div>
+
+    <div class="sound-control-row">
+      <label for="sound-decay">Decay (0.05-2s)</label>
+      <input id="sound-decay" type="range" min="0.05" max="2" step="0.01" value="0.35" aria-label="Envelope decay">
+      <span id="sound-decay-value">0.35 s</span>
+    </div>
+
+    <div class="sound-control-row">
+      <label for="sound-sustain">Sustain (0-0.9)</label>
+      <input id="sound-sustain" type="range" min="0" max="0.9" step="0.01" value="0" aria-label="Envelope sustain">
+      <span id="sound-sustain-value">0.00</span>
+    </div>
+
+    <div class="sound-control-row">
+      <label for="sound-release">Release (0.05-2s)</label>
+      <input id="sound-release" type="range" min="0.05" max="2" step="0.01" value="0.6" aria-label="Envelope release">
+      <span id="sound-release-value">0.60 s</span>
+    </div>
+
+    <div class="sound-control-row">
+      <label for="sound-volume">Volume (-24 to 0 dB)</label>
+      <input id="sound-volume" type="range" min="-24" max="0" step="1" value="-11" aria-label="Synth volume">
+      <span id="sound-volume-value">-11 dB</span>
+    </div>
+  </div>
+</div>
+
 <!-- Seek bar -->
 <div id="seek-bar-container">
   <canvas id="seek-density-canvas"></canvas>

@@ -156,6 +156,60 @@ input[type="range"]:focus-visible {
   font-weight: 600;
 }
 
+#sound-settings-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+  padding: var(--sp-2) var(--sp-4);
+  background: var(--bg-secondary);
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+
+#btn-sound-advanced {
+  align-self: flex-start;
+}
+
+#sound-settings-panel {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: var(--sp-2) var(--sp-4);
+  width: 100%;
+  padding: var(--sp-2) var(--sp-3);
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  background: var(--bg-tertiary);
+}
+
+#sound-settings-panel.hidden {
+  display: none;
+}
+
+.sound-control-row {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  gap: var(--sp-2);
+}
+
+.sound-control-row label {
+  grid-column: 1 / -1;
+  font-size: var(--fs-xs);
+  color: var(--text-muted);
+}
+
+.sound-control-row input[type="range"] {
+  width: 100%;
+}
+
+.sound-control-row span {
+  min-width: 58px;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  font-size: var(--fs-xs);
+  color: var(--text-primary);
+}
+
 /* Transport buttons */
 .transport-btn {
   width: 32px;
@@ -219,6 +273,9 @@ input[type="range"]:focus-visible {
   #header {
     flex-wrap: wrap;
     gap: var(--sp-3);
+  }
+  #sound-settings-wrap {
+    padding: var(--sp-2) var(--sp-3);
   }
   .control-group-label { display: none; }
 }
