@@ -307,6 +307,34 @@ export function initControls(dom) {
     dom.btnFullscreen.setAttribute('aria-label', isFullscreen ? 'Exit fullscreen' : 'Toggle fullscreen');
     dom.btnFullscreen.setAttribute('title', isFullscreen ? 'Exit fullscreen' : 'Toggle fullscreen');
   });
+
+  // ---- Piano container drag-scroll ----
+  {
+    let isDragging = false;
+    let startX = 0;
+    let startScrollLeft = 0;
+
+    dom.pianoContainer.addEventListener('mousedown', (e) => {
+      // Only drag on the container itself or background, not on piano keys
+      isDragging = true;
+      startX = e.clientX;
+      startScrollLeft = dom.pianoContainer.scrollLeft;
+      dom.pianoContainer.style.cursor = 'grabbing';
+      e.preventDefault();
+    });
+
+    window.addEventListener('mousemove', (e) => {
+      if (!isDragging) return;
+      const dx = e.clientX - startX;
+      dom.pianoContainer.scrollLeft = startScrollLeft - dx;
+    });
+
+    window.addEventListener('mouseup', () => {
+      if (!isDragging) return;
+      isDragging = false;
+      dom.pianoContainer.style.cursor = '';
+    });
+  }
 }
 
 /**
