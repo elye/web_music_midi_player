@@ -195,6 +195,11 @@ input[type="range"]:focus-visible {
   width: 100%;
 }
 
+.sound-control-row select {
+  width: 100%;
+  min-width: 130px;
+}
+
 .sound-control-row span {
   min-width: 58px;
   text-align: right;
