@@ -41,9 +41,9 @@ export function createSynth() {
     maxPolyphony: 64,
     voice: Tone.Synth,
     options: {
-      oscillator: { type: 'triangle8' },
-      envelope: { attack: 0.005, decay: 1.0, sustain: 0.1, release: 1.5 },
-      volume: -12,
+      oscillator: { type: 'sine' },
+      envelope: { attack: 0.003, decay: 0.35, sustain: 0, release: 0.6 },
+      volume: -11,
     },
   }).toDestination();
 }
