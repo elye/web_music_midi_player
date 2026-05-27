@@ -105,6 +105,11 @@ export function pausePlayback() {
 /** Stop Transport and reset to 0 */
 export function stopPlayback() {
   Tone.Transport.stop();
+  if (state.synth) {
+    state.synth.dispose();
+    state.synth = null;
+    createSynth();
+  }
   Tone.Transport.seconds = 0;
   if (state.part) {
     state.part.dispose();

@@ -1,14 +1,32 @@
-import { beforeEach, describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import state from '../js/state.js';
-import { midiTimeToTransport, transportToMidiTime } from '../js/audio-engine.js';
+import { createSynth, midiTimeToTransport, stopPlayback, transportToMidiTime } from '../js/audio-engine.js';
 
 beforeEach(() => {
   state.originalBpm = 120;
+  state.isPlaying = false;
+  state.part = null;
+  state.synth = null;
+  state.activeNotes.clear();
+
+  const newSynth = {
+    dispose: vi.fn(),
+  };
+
   globalThis.Tone = {
     Transport: {
       bpm: { value: 120 },
+      stop: vi.fn(),
+      seconds: 0,
     },
+    Synth: function Synth() {},
+    PolySynth: vi.fn(() => ({
+      ...newSynth,
+      toDestination() {
+        return this;
+      },
+    })),
   };
 });
 
@@ -36,5 +54,24 @@ describe('audio engine time conversion', () => {
     const roundTrip = transportToMidiTime(transport);
 
     expect(roundTrip).toBeCloseTo(original, 6);
+  });
+
+  it('stopPlayback immediately disposes active synth and recreates it', () => {
+    createSynth();
+    const oldSynth = state.synth;
+
+    state.part = { dispose: vi.fn() };
+    state.isPlaying = true;
+    state.activeNotes.add(60);
+
+    stopPlayback();
+
+    expect(Tone.Transport.stop).toHaveBeenCalledTimes(1);
+    expect(oldSynth.dispose).toHaveBeenCalledTimes(1);
+    expect(state.synth).not.toBeNull();
+    expect(state.synth).not.toBe(oldSynth);
+    expect(state.part).toBeNull();
+    expect(state.isPlaying).toBe(false);
+    expect(state.activeNotes.size).toBe(0);
   });
 });
