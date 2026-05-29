@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="32" height="32">
+  <!-- Dark background circle -->
+  <circle cx="16" cy="16" r="16" fill="#1a1a2e"/>
+  <!-- Musical note: filled notehead + stem + flag -->
+  <!-- Notehead (oval) -->
+  <ellipse cx="12" cy="22" rx="5" ry="3.5" transform="rotate(-15 12 22)" fill="#a78bfa"/>
+  <!-- Stem -->
+  <rect x="16.5" y="9" width="2.2" height="13" rx="1.1" fill="#a78bfa"/>
+  <!-- Flag -->
+  <path d="M18.7 9 Q26 12 22 18" stroke="#a78bfa" stroke-width="2.2" fill="none" stroke-linecap="round"/>
+</svg>
