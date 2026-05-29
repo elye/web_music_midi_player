@@ -129,6 +129,22 @@ input[type="range"]:focus-visible {
 #header::-webkit-scrollbar-thumb { background: #44475a; border-radius: 2px; }
 #header::-webkit-scrollbar-track { background: transparent; }
 
+/* Second menu row (collapsible) */
+#menu-row-2 {
+  display: none;
+  background: var(--bg-secondary);
+  border-bottom: 1px solid var(--border);
+  padding: var(--sp-2) var(--sp-4);
+  align-items: center;
+  gap: var(--sp-3);
+  flex-shrink: 0;
+  flex-wrap: wrap;
+}
+
+#menu-row-2.open {
+  display: flex;
+}
+
 .control-group {
   display: flex;
   align-items: center;

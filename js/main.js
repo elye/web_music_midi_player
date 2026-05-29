@@ -67,6 +67,8 @@ const dom = {
   soundVolume:           document.getElementById('sound-volume'),
   soundVolumeValue:      document.getElementById('sound-volume-value'),
   waterfallInvertToggle: document.getElementById('waterfall-invert-toggle'),
+  moreBtn:              document.getElementById('more-btn'),
+  menuRow2:             document.getElementById('menu-row-2'),
 };
 
 /* ==========================================================

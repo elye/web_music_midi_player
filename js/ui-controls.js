@@ -90,6 +90,13 @@ export function initControls(dom) {
     dom.btnTogglePianoRoll.setAttribute('title', isHidden ? 'Show piano roll' : 'Hide piano roll');
   });
 
+  // ---- More button (row 2 toggle) ----
+  dom.moreBtn.addEventListener('click', () => {
+    const isOpen = dom.menuRow2.classList.toggle('open');
+    dom.moreBtn.setAttribute('aria-expanded', String(isOpen));
+    dom.moreBtn.textContent = isOpen ? '\u25b2 Less' : '\u25bc More';
+  });
+
   dom.soundOscType.addEventListener('change', (e) => {
     updateSynthSettings({ oscillator: e.target.value });
     syncSoundControls(dom);

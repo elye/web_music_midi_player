@@ -34,10 +34,6 @@
       Load MIDI
     </button>
     <input type="file" id="file-input" accept=".mid,.midi" hidden>
-    <button id="btn-export" disabled aria-label="Export edited MIDI file">
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-      Export
-    </button>
   </div>
 
   <div class="separator"></div>
@@ -55,14 +51,6 @@
     <button id="btn-stop" class="transport-btn" disabled aria-label="Stop playback">
       <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><rect x="4" y="4" width="16" height="16" rx="2"/></svg>
     </button>
-  </div>
-
-  <div class="separator"></div>
-
-  <!-- Count-in -->
-  <div class="control-group">
-    <span class="control-group-label">Count-in</span>
-    <input type="number" id="count-in-input" min="0" max="8" value="0" aria-label="Count-in beats" style="width: 50px;">
   </div>
 
   <div class="separator"></div>
@@ -122,33 +110,8 @@
 
   <div class="separator"></div>
 
-  <!-- Sound preset + Advanced Sound -->
-  <div class="control-group">
-    <span class="control-group-label">Preset</span>
-    <select id="sound-preset" aria-label="Sound preset">
-      <option value="">— Preset —</option>
-      <option value="Piano" selected>Piano</option>
-      <option value="Organ">Organ</option>
-      <option value="Guitar">Guitar</option>
-      <option value="Brass">Brass</option>
-      <option value="Digital">Digital</option>
-    </select>
-  </div>
-
-  <div class="separator"></div>
-
-  <div class="separator"></div>
-        <button id="btn-toggle-piano-roll" class="secondary" aria-label="Show piano roll" title="Show piano roll" aria-pressed="false">
-          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <rect x="2" y="3" width="20" height="14" rx="2"></rect>
-            <line x1="8" y1="21" x2="16" y2="21"></line>
-            <line x1="12" y1="17" x2="12" y2="21"></line>
-          </svg>
-          Piano Roll
-        </button>
-
-  <button id="btn-sound-advanced" class="secondary" type="button" aria-expanded="false" aria-controls="sound-settings-panel">
-    Advanced Sound
+  <button id="more-btn" class="secondary" aria-label="Show more controls" aria-expanded="false">
+    &#9660; More
   </button>
 
         <button id="btn-fullscreen" class="secondary" aria-label="Toggle fullscreen" title="Toggle fullscreen">
@@ -165,9 +128,53 @@
             <line x1="21" y1="3" x2="14" y2="10"></line>
           </svg>
         </button>
+</div>
+
+<div id="menu-row-2">
+  <!-- Export -->
+  <button id="btn-export" disabled aria-label="Export edited MIDI file">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+    Export
+  </button>
 
   <div class="separator"></div>
 
+  <!-- Count-in -->
+  <div class="control-group">
+    <span class="control-group-label">Count-in</span>
+    <input type="number" id="count-in-input" min="0" max="8" value="0" aria-label="Count-in beats" style="width: 50px;">
+  </div>
+
+  <div class="separator"></div>
+
+  <!-- Preset Sound -->
+  <div class="control-group">
+    <span class="control-group-label">Preset</span>
+    <select id="sound-preset" aria-label="Sound preset">
+      <option value="">— Preset —</option>
+      <option value="Piano" selected>Piano</option>
+      <option value="Organ">Organ</option>
+      <option value="Guitar">Guitar</option>
+      <option value="Brass">Brass</option>
+      <option value="Digital">Digital</option>
+    </select>
+  </div>
+
+  <div class="separator"></div>
+
+  <!-- Piano Roll -->
+  <button id="btn-toggle-piano-roll" class="secondary" aria-label="Show piano roll" title="Show piano roll" aria-pressed="false">
+    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <rect x="2" y="3" width="20" height="14" rx="2"></rect>
+      <line x1="8" y1="21" x2="16" y2="21"></line>
+      <line x1="12" y1="17" x2="12" y2="21"></line>
+    </svg>
+    Piano Roll
+  </button>
+
+  <div class="separator"></div>
+
+  <!-- Seek -->
   <div class="control-group">
     <span class="control-group-label">Seek</span>
     <label style="display:inline-flex;align-items:center;gap:var(--sp-2);font-size:var(--fs-sm);color:var(--text-muted);cursor:pointer;" for="waterfall-invert-toggle">
@@ -175,6 +182,13 @@
       Invert seek
     </label>
   </div>
+
+  <div class="separator"></div>
+
+  <!-- Advanced Sound (last) -->
+  <button id="btn-sound-advanced" class="secondary" type="button" aria-expanded="false" aria-controls="sound-settings-panel">
+    Advanced Sound
+  </button>
 </div>
 
 <div id="sound-settings-wrap">
