@@ -5,6 +5,8 @@
 import state from './state.js';
 import { setupCanvas, roundRect } from './utils.js';
 import { MIDI_NOTE_MIN, MIDI_NOTE_MAX, WATERFALL_PPS } from './constants.js';
+import { seekTo } from './audio-engine.js';
+import { clamp } from './utils.js';
 
 /**
  * Render the waterfall canvas at the given MIDI time.
@@ -84,4 +86,70 @@ export function renderWaterfall(canvas, container, pianoEl, currentTime) {
     ctx.fill();
   }
   ctx.shadowBlur = 0;
+}
+
+/* Seconds to seek per line/page unit in wheel events */
+const WHEEL_SECONDS_PER_LINE = 5;
+const WHEEL_SECONDS_PER_PAGE = 30;
+
+/**
+ * When true the seek direction is inverted from the raw input delta.
+ * Default true = the user-expected direction (opposite of the original implementation).
+ */
+let invertSeekDirection = true;
+
+export function setWaterfallSeekInverted(value) {
+  invertSeekDirection = value;
+}
+
+/**
+ * Attach wheel and touch event listeners to the waterfall panel for seek-on-scroll.
+ * Scrolling down → seek forward; scrolling up → seek backward.
+ * @param {HTMLElement} panelEl — the waterfall panel container element
+ */
+export function initWaterfallSeek(panelEl) {
+  // --- Wheel (desktop mouse wheel / trackpad) ---
+  panelEl.addEventListener('wheel', (e) => {
+    if (!state.midi) return;
+    e.preventDefault();
+
+    let delta;
+    if (e.deltaMode === WheelEvent.DOM_DELTA_PIXEL) {
+      // Smooth trackpad: scale pixels → seconds (150 px/s native, ×2 for feel)
+      const pps = WATERFALL_PPS * (state.originalBpm / 120);
+      delta = (e.deltaY / pps) * 2;
+    } else if (e.deltaMode === WheelEvent.DOM_DELTA_LINE) {
+      delta = Math.sign(e.deltaY) * WHEEL_SECONDS_PER_LINE;
+    } else {
+      // DOM_DELTA_PAGE
+      delta = Math.sign(e.deltaY) * WHEEL_SECONDS_PER_PAGE;
+    }
+
+    const dirMult = invertSeekDirection ? -1 : 1;
+    const currentTime = state.totalDuration > 0
+      ? clamp(Tone.Transport.seconds * (Tone.Transport.bpm.value / state.originalBpm), 0, state.totalDuration)
+      : 0;
+    seekTo(clamp(currentTime + dirMult * delta, 0, state.totalDuration));
+  }, { passive: false });
+
+  // --- Touch (mobile drag up/down for continuous seek) ---
+  let touchStartY = 0;
+  let touchSnapshotTime = 0;
+
+  panelEl.addEventListener('touchstart', (e) => {
+    touchStartY = e.touches[0].clientY;
+    touchSnapshotTime = state.totalDuration > 0
+      ? clamp(Tone.Transport.seconds * (Tone.Transport.bpm.value / state.originalBpm), 0, state.totalDuration)
+      : 0;
+  }, { passive: true });
+
+  panelEl.addEventListener('touchmove', (e) => {
+    if (!state.midi) return;
+    e.preventDefault(); // prevent page scroll while dragging on the waterfall
+
+    const pps = WATERFALL_PPS * (state.originalBpm / 120);
+    const dirMult = invertSeekDirection ? -1 : 1;
+    const deltaY = e.touches[0].clientY - touchStartY;
+    seekTo(clamp(touchSnapshotTime - dirMult * deltaY / pps, 0, state.totalDuration));
+  }, { passive: false });
 }

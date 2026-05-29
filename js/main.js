@@ -7,7 +7,7 @@ import { formatTime, clamp } from './utils.js';
 import { initToast } from './toast.js';
 import { buildPiano, updatePianoHighlights } from './piano-keyboard.js';
 import { renderPianoRoll } from './piano-roll.js';
-import { renderWaterfall } from './waterfall.js';
+import { renderWaterfall, initWaterfallSeek, setWaterfallSeekInverted } from './waterfall.js';
 import { drawSeekDensity } from './seek-bar.js';
 import { transportToMidiTime, stopPlayback } from './audio-engine.js';
 import { initControls } from './ui-controls.js';
@@ -66,6 +66,7 @@ const dom = {
   soundReleaseValue:document.getElementById('sound-release-value'),
   soundVolume:           document.getElementById('sound-volume'),
   soundVolumeValue:      document.getElementById('sound-volume-value'),
+  waterfallInvertToggle: document.getElementById('waterfall-invert-toggle'),
 };
 
 /* ==========================================================
@@ -131,6 +132,12 @@ const resizeObserver = new ResizeObserver(() => {
 initToast(dom.toastContainer);
 buildPiano(dom.piano);
 initControls(dom);
+initWaterfallSeek(dom.waterfallPanel);
+
+// Sync waterfall seek inversion toggle (default: checked = inverted)
+dom.waterfallInvertToggle.addEventListener('change', (e) => {
+  setWaterfallSeekInverted(e.target.checked);
+});
 
 dom.pianoContainer.addEventListener('scroll', () => {
   if (state.midi) {
