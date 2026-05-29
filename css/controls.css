@@ -289,3 +289,49 @@ button[aria-pressed="true"] {
   }
   .control-group-label { display: none; }
 }
+
+/* ---- BPM drag on touch devices ---- */
+/* Prevent the browser from intercepting the touch as a scroll/pan gesture
+   so our JS drag handler receives every touchmove unimpeded. */
+@media (pointer: coarse) {
+  #bpm-input {
+    /* No touch-action restriction here — the JS touchmove handler calls
+       preventDefault() only after a confirmed vertical drag (past dead zone),
+       so horizontal swipes naturally bubble up and let the header scroll. */
+    cursor: ns-resize;
+  }
+
+  /* Prevent the slider from triggering horizontal scroll on the parent header */
+  #bpm-slider {
+    touch-action: none;
+  }
+
+  /* Visual feedback while actively dragging */
+  #bpm-input.bpm-dragging {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 2px rgba(76, 201, 240, 0.25);
+    outline: none;
+  }
+
+  /* Wider BPM slider on touch so the full-range swipe is comfortable */
+  #bpm-slider {
+    width: 120px !important;
+  }
+
+  /* Thumb — visually compact but still finger-friendly at 20px */
+  input[type="range"]::-webkit-slider-thumb {
+    width: 20px;
+    height: 20px;
+  }
+
+  input[type="range"]::-moz-range-thumb {
+    width: 20px;
+    height: 20px;
+    border: none;
+  }
+
+  /* Taller track for a bigger hit area */
+  input[type="range"] {
+    height: 8px;
+  }
+}

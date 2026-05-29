@@ -210,6 +210,116 @@ export function initControls(dom) {
     }, BPM_DEBOUNCE_MS);
   });
 
+  // ---- BPM touch drag (mobile) ----
+  // Vertical drag on the number input: drag up = increase BPM, drag down = decrease BPM.
+  // A dead zone of 5 px distinguishes a tap (opens keyboard) from an intentional drag.
+  {
+    const BPM_PX_PER_STEP = 3; // pixels of vertical movement per 1 BPM
+    let bpmDrag = null; // null when idle; { startY, startBpm, active } while touching
+
+    dom.bpmInput.addEventListener('touchstart', (e) => {
+      if (e.touches.length !== 1) return;
+      // Do NOT stopPropagation here — allow the header to see this touch
+      // so the menu bar can still be dragged when the user swipes over this field.
+      bpmDrag = {
+        startY: e.touches[0].clientY,
+        startBpm: clamp(parseInt(dom.bpmInput.value) || 120, 20, 300),
+        active: false,
+      };
+    }, { passive: true });
+
+    dom.bpmInput.addEventListener('touchmove', (e) => {
+      if (!bpmDrag || e.touches.length !== 1) return;
+
+      const dy = bpmDrag.startY - e.touches[0].clientY; // positive = finger moved up
+
+      // Enforce dead zone before committing to drag mode.
+      // Inside the dead zone, let the event bubble so the header can scroll.
+      if (!bpmDrag.active && Math.abs(dy) < 5) return;
+
+      // Past the dead zone — prevent page scroll, stop propagation, enter drag mode
+      e.preventDefault();
+      e.stopPropagation(); // Only block header scrolling once we've confirmed a vertical drag
+      if (!bpmDrag.active) {
+        bpmDrag.active = true;
+        dom.bpmInput.classList.add('bpm-dragging');
+      }
+
+      const delta = Math.round(dy / BPM_PX_PER_STEP);
+      const newBpm = clamp(bpmDrag.startBpm + delta, 20, 300);
+
+      dom.bpmInput.value = newBpm;
+      dom.bpmSlider.value = newBpm;
+
+      clearTimeout(state.bpmDebounceTimer);
+      state.bpmDebounceTimer = setTimeout(() => {
+        Tone.Transport.bpm.value = newBpm;
+      }, BPM_DEBOUNCE_MS);
+    }, { passive: false });
+
+    const finishBpmDrag = () => {
+      if (!bpmDrag) return;
+      if (bpmDrag.active) {
+        // Commit immediately instead of waiting for the debounce
+        const bpm = clamp(parseInt(dom.bpmInput.value) || 120, 20, 300);
+        clearTimeout(state.bpmDebounceTimer);
+        Tone.Transport.bpm.value = bpm;
+        dom.bpmInput.classList.remove('bpm-dragging');
+      }
+      bpmDrag = null;
+    };
+
+    dom.bpmInput.addEventListener('touchend', finishBpmDrag, { passive: true });
+    dom.bpmInput.addEventListener('touchcancel', finishBpmDrag, { passive: true });
+
+    // ---- BPM slider custom horizontal touch drag ----
+    // Swiping across the full slider width changes BPM by the full range (20–300).
+    // This replaces the unreliable native range-input touch behaviour on mobile.
+    const BPM_MIN = 20;
+    const BPM_MAX = 300;
+    let sliderDrag = null; // null when idle
+
+    dom.bpmSlider.addEventListener('touchstart', (e) => {
+      if (e.touches.length !== 1) return;
+      e.stopPropagation();
+      const rect = dom.bpmSlider.getBoundingClientRect();
+      sliderDrag = {
+        startX: e.touches[0].clientX,
+        startBpm: clamp(parseInt(dom.bpmInput.value) || 120, BPM_MIN, BPM_MAX),
+        sliderWidth: rect.width || 120,
+      };
+    }, { passive: true });
+
+    dom.bpmSlider.addEventListener('touchmove', (e) => {
+      if (!sliderDrag || e.touches.length !== 1) return;
+      e.stopPropagation();
+      e.preventDefault(); // prevent the header from scrolling horizontally
+
+      const dx = e.touches[0].clientX - sliderDrag.startX;
+      const delta = Math.round((dx / sliderDrag.sliderWidth) * (BPM_MAX - BPM_MIN));
+      const newBpm = clamp(sliderDrag.startBpm + delta, BPM_MIN, BPM_MAX);
+
+      dom.bpmInput.value = newBpm;
+      dom.bpmSlider.value = newBpm;
+
+      clearTimeout(state.bpmDebounceTimer);
+      state.bpmDebounceTimer = setTimeout(() => {
+        Tone.Transport.bpm.value = newBpm;
+      }, BPM_DEBOUNCE_MS);
+    }, { passive: false });
+
+    const finishSliderDrag = () => {
+      if (!sliderDrag) return;
+      const bpm = clamp(parseInt(dom.bpmInput.value) || 120, BPM_MIN, BPM_MAX);
+      clearTimeout(state.bpmDebounceTimer);
+      Tone.Transport.bpm.value = bpm;
+      sliderDrag = null;
+    };
+
+    dom.bpmSlider.addEventListener('touchend', finishSliderDrag, { passive: true });
+    dom.bpmSlider.addEventListener('touchcancel', finishSliderDrag, { passive: true });
+  }
+
   // ---- Reset ----
   dom.btnReset.addEventListener('click', () => {
     if (!state.midi) return;
