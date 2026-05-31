@@ -149,32 +149,6 @@
 
   <div class="separator"></div>
 
-  <!-- Sound Mode -->
-  <div class="control-group">
-    <span class="control-group-label">Sound Mode</span>
-    <select id="sound-mode-select" aria-label="Sound mode">
-      <option value="auto" selected>Auto (MIDI instruments)</option>
-      <option value="custom">Custom (single preset)</option>
-    </select>
-  </div>
-
-  <div class="separator"></div>
-
-  <!-- Preset Sound -->
-  <div class="control-group">
-    <span class="control-group-label">Preset</span>
-    <select id="sound-preset" aria-label="Sound preset" disabled>
-      <option value="">— Preset —</option>
-      <option value="Piano" selected>Piano</option>
-      <option value="Organ">Organ</option>
-      <option value="Guitar">Guitar</option>
-      <option value="Brass">Brass</option>
-      <option value="Digital">Digital</option>
-    </select>
-  </div>
-
-  <div class="separator"></div>
-
   <!-- Piano Roll -->
   <button id="btn-toggle-piano-roll" class="secondary" aria-label="Show piano roll" title="Show piano roll" aria-pressed="false">
     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -198,7 +172,29 @@
 
   <div class="separator"></div>
 
-  <!-- Advanced Sound (last) -->
+  <!-- Sound Mode -->
+  <div class="control-group">
+    <span class="control-group-label">Sound Mode</span>
+    <select id="sound-mode-select" aria-label="Sound mode" style="min-width: 170px;">
+      <option value="auto" selected>Auto (MIDI instruments)</option>
+      <option value="custom">Custom (single preset)</option>
+    </select>
+  </div>
+
+  <!-- Preset Sound -->
+  <div class="control-group">
+    <span class="control-group-label">Preset</span>
+    <select id="sound-preset" aria-label="Sound preset" disabled>
+      <option value="">— Preset —</option>
+      <option value="Piano" selected>Piano</option>
+      <option value="Organ">Organ</option>
+      <option value="Guitar">Guitar</option>
+      <option value="Brass">Brass</option>
+      <option value="Digital">Digital</option>
+    </select>
+  </div>
+
+  <!-- Advanced Sound -->
   <button id="btn-sound-advanced" class="secondary" type="button" aria-expanded="false" aria-controls="sound-settings-panel">
     Advanced Sound
   </button>
