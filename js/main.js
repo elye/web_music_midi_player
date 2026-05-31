@@ -9,7 +9,7 @@ import { buildPiano, updatePianoHighlights } from './piano-keyboard.js';
 import { renderPianoRoll } from './piano-roll.js';
 import { renderWaterfall, initWaterfallSeek, setWaterfallSeekInverted } from './waterfall.js';
 import { drawSeekDensity } from './seek-bar.js';
-import { transportToMidiTime, stopPlayback, seekTo } from './audio-engine.js';
+import { transportToMidiTime, stopPlayback, seekTo, pausePlayback, startPlayback, performCountIn } from './audio-engine.js';
 import { initControls } from './ui-controls.js';
 import { MIDI_NOTE_MIN, MIDI_NOTE_MAX } from './constants.js';
 
@@ -117,11 +117,24 @@ function renderLoop() {
   renderWaterfall(dom.waterfallCanvas, dom.waterfallPanel, dom.piano, currentTime);
 
   // Loop / region boundary check
-  if (state.isPlaying) {
-    const loopEnd = state.loopEnd != null ? state.loopEnd : state.totalDuration;
+  const loopBarVisible = !dom.loopBar.classList.contains('hidden');
+  if (state.isPlaying && !state.countingIn) {
+    const loopEnd = (loopBarVisible && state.loopEnd != null) ? state.loopEnd : state.totalDuration;
     if (currentTime >= loopEnd) {
-      if (state.loopEnabled) {
-        seekTo(state.loopStart);
+      if (loopBarVisible && state.loopEnabled) {
+        const countIn = parseInt(dom.countInInput.value) || 0;
+        if (countIn > 0) {
+          // Pause, count-in, then resume from loop start
+          pausePlayback();
+          seekTo(state.loopStart);
+          state.countingIn = true;
+          performCountIn(countIn, dom.countInOverlay, dom.countInBeat).then(() => {
+            state.countingIn = false;
+            startPlayback(dom.audioOverlay);
+          });
+        } else {
+          seekTo(state.loopStart);
+        }
       } else if (state.loopEnd != null) {
         // Custom end point set but loop off — stop
         stopPlayback();
