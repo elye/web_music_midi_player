@@ -3,7 +3,7 @@
    ========================================================== */
 
 import state from './state.js';
-import { clamp, formatTime } from './utils.js';
+import { clamp, formatTime, formatTimeMMSS, parseTimeMMSS } from './utils.js';
 import { showToast } from './toast.js';
 import { BPM_DEBOUNCE_MS } from './constants.js';
 import {
@@ -126,6 +126,56 @@ export function initControls(dom) {
     dom.moreBtn.textContent = isOpen ? '\u25b2 Less' : '\u25bc More';
   });
 
+  // ---- Loop button & loop bar ----
+  dom.btnLoop.addEventListener('click', () => {
+    const isOpen = dom.loopBar.classList.toggle('hidden');
+    dom.btnLoop.setAttribute('aria-expanded', String(!isOpen));
+  });
+
+  dom.loopEnabledCheckbox.addEventListener('change', (e) => {
+    state.loopEnabled = e.target.checked;
+    redrawSeekBar(dom);
+  });
+
+  dom.loopStartInput.addEventListener('change', () => {
+    const seconds = parseTimeMMSS(dom.loopStartInput.value);
+    if (isNaN(seconds)) {
+      dom.loopStartInput.value = formatTimeMMSS(state.loopStart);
+      return;
+    }
+    const clamped = clamp(seconds, 0, (state.loopEnd != null ? state.loopEnd : state.totalDuration) - 1);
+    state.loopStart = clamped;
+    dom.loopStartInput.value = formatTimeMMSS(clamped);
+    redrawSeekBar(dom);
+  });
+
+  dom.loopEndInput.addEventListener('change', () => {
+    const seconds = parseTimeMMSS(dom.loopEndInput.value);
+    if (isNaN(seconds)) {
+      dom.loopEndInput.value = formatTimeMMSS(state.loopEnd != null ? state.loopEnd : state.totalDuration);
+      return;
+    }
+    const clamped = clamp(seconds, state.loopStart + 1, state.totalDuration);
+    // If clamped equals totalDuration, treat as "no custom end"
+    if (Math.abs(clamped - state.totalDuration) < 0.5) {
+      state.loopEnd = null;
+    } else {
+      state.loopEnd = clamped;
+    }
+    dom.loopEndInput.value = formatTimeMMSS(state.loopEnd != null ? state.loopEnd : state.totalDuration);
+    redrawSeekBar(dom);
+  });
+
+  dom.btnLoopReset.addEventListener('click', () => {
+    state.loopStart = 0;
+    state.loopEnd = null;
+    state.loopEnabled = false;
+    dom.loopStartInput.value = formatTimeMMSS(0);
+    dom.loopEndInput.value = formatTimeMMSS(state.totalDuration);
+    dom.loopEnabledCheckbox.checked = false;
+    redrawSeekBar(dom);
+  });
+
   dom.soundOscType.addEventListener('change', (e) => {
     updateSynthSettings({ oscillator: e.target.value });
     syncSoundControls(dom);
@@ -199,6 +249,12 @@ export function initControls(dom) {
         state.countingIn = false;
         dom.btnPlay.disabled = false;
         dom.btnStop.disabled = false;
+      }
+
+      // If starting fresh (transport stopped) and a custom loop start is set,
+      // seek to the loop start point before playing
+      if (state.loopStart > 0 && Tone.Transport.state === 'stopped') {
+        seekTo(state.loopStart);
       }
 
       await startPlayback(dom.audioOverlay);
@@ -483,6 +539,11 @@ export function initControls(dom) {
   }
 }
 
+/** Redraw the seek bar to reflect loop region changes */
+function redrawSeekBar(dom) {
+  drawSeekDensity(dom.seekDensityCanvas, dom.seekContainer);
+}
+
 /**
  * Reset BPM and transpose state/UI to defaults.
  * @param {number} newBpm — BPM value to set
@@ -520,6 +581,14 @@ export function resetRuntimeControlsForNewFile(dom) {
   // Reset muted tracks
   state.mutedTracks.clear();
   state.hiddenTracks.clear();
+
+  // Reset loop
+  state.loopStart = 0;
+  state.loopEnd = null;
+  state.loopEnabled = false;
+  dom.loopStartInput.value = formatTimeMMSS(0);
+  dom.loopEndInput.value = formatTimeMMSS(state.totalDuration);
+  dom.loopEnabledCheckbox.checked = false;
 }
 
 /* ----------------------------------------------------------
@@ -668,6 +737,7 @@ async function handleFileLoad(file, dom) {
   dom.btnStop.disabled = false;
   dom.btnRewind.disabled = false;
   dom.btnReset.disabled = false;
+  dom.btnLoop.disabled = false;
 
   // Show visualizers
   dom.emptyState.classList.add('hidden');

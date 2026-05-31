@@ -22,6 +22,11 @@ class StateStore {
     this.mutedTracks = new Set();  // Set of track indices that are muted
     this.hiddenTracks = new Set(); // Set of track indices hidden from visualizers
 
+    // Loop/region playback
+    this.loopStart = 0;           // Start of loop region in MIDI seconds
+    this.loopEnd = null;          // End of loop region in MIDI seconds (null = totalDuration)
+    this.loopEnabled = false;     // Whether looping is active
+
     // Modifications
     this.transpose = 0;
 

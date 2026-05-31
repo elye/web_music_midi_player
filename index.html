@@ -112,6 +112,18 @@
 
   <div class="separator"></div>
 
+  <button id="btn-loop" class="secondary" aria-label="Toggle loop controls" aria-expanded="false" disabled>
+    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <polyline points="17 1 21 5 17 9"></polyline>
+      <path d="M3 11V9a4 4 0 014-4h14"></path>
+      <polyline points="7 23 3 19 7 15"></polyline>
+      <path d="M21 13v2a4 4 0 01-4 4H3"></path>
+    </svg>
+    Loop
+  </button>
+
+  <div class="separator"></div>
+
   <button id="more-btn" class="secondary" aria-label="Show more controls" aria-expanded="false">
     &#9660; More
   </button>
@@ -130,6 +142,25 @@
             <line x1="21" y1="3" x2="14" y2="10"></line>
           </svg>
         </button>
+</div>
+
+<!-- Loop region controls -->
+<div id="loop-bar" class="hidden">
+  <div class="control-group">
+    <span class="control-group-label">Start</span>
+    <input type="text" id="loop-start-input" value="00:00" placeholder="mm:ss" aria-label="Loop start time" style="width: 60px; font-variant-numeric: tabular-nums;">
+  </div>
+  <div class="control-group">
+    <span class="control-group-label">End</span>
+    <input type="text" id="loop-end-input" value="00:00" placeholder="mm:ss" aria-label="Loop end time" style="width: 60px; font-variant-numeric: tabular-nums;">
+  </div>
+  <div class="control-group">
+    <label style="display:inline-flex;align-items:center;gap:var(--sp-2);font-size:var(--fs-sm);color:var(--text-muted);cursor:pointer;" for="loop-enabled-checkbox">
+      <input type="checkbox" id="loop-enabled-checkbox" aria-label="Enable loop">
+      Loop
+    </label>
+  </div>
+  <button id="btn-loop-reset" class="secondary" type="button" aria-label="Reset loop to full song">Reset</button>
 </div>
 
 <div id="menu-row-2">

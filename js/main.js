@@ -9,7 +9,7 @@ import { buildPiano, updatePianoHighlights } from './piano-keyboard.js';
 import { renderPianoRoll } from './piano-roll.js';
 import { renderWaterfall, initWaterfallSeek, setWaterfallSeekInverted } from './waterfall.js';
 import { drawSeekDensity } from './seek-bar.js';
-import { transportToMidiTime, stopPlayback } from './audio-engine.js';
+import { transportToMidiTime, stopPlayback, seekTo } from './audio-engine.js';
 import { initControls } from './ui-controls.js';
 import { MIDI_NOTE_MIN, MIDI_NOTE_MAX } from './constants.js';
 
@@ -70,6 +70,12 @@ const dom = {
   waterfallInvertToggle: document.getElementById('waterfall-invert-toggle'),
   moreBtn:              document.getElementById('more-btn'),
   menuRow2:             document.getElementById('menu-row-2'),
+  btnLoop:              document.getElementById('btn-loop'),
+  loopBar:              document.getElementById('loop-bar'),
+  loopStartInput:       document.getElementById('loop-start-input'),
+  loopEndInput:         document.getElementById('loop-end-input'),
+  loopEnabledCheckbox:  document.getElementById('loop-enabled-checkbox'),
+  btnLoopReset:         document.getElementById('btn-loop-reset'),
   trackPanelWrap:       document.getElementById('track-panel-wrap'),
   btnToggleTracks:      document.getElementById('btn-toggle-tracks'),
   trackList:            document.getElementById('track-list'),
@@ -110,9 +116,20 @@ function renderLoop() {
   renderPianoRoll(dom.pianoRollCanvas, dom.pianoRollPanel, currentTime);
   renderWaterfall(dom.waterfallCanvas, dom.waterfallPanel, dom.piano, currentTime);
 
-  // Auto-stop at end
-  if (state.isPlaying && currentTime >= state.totalDuration) {
-    stopPlayback();
+  // Loop / region boundary check
+  if (state.isPlaying) {
+    const loopEnd = state.loopEnd != null ? state.loopEnd : state.totalDuration;
+    if (currentTime >= loopEnd) {
+      if (state.loopEnabled) {
+        seekTo(state.loopStart);
+      } else if (state.loopEnd != null) {
+        // Custom end point set but loop off — stop
+        stopPlayback();
+      } else {
+        // No custom end, no loop — stop at song end
+        stopPlayback();
+      }
+    }
   }
 
   state.animFrameId = requestAnimationFrame(renderLoop);

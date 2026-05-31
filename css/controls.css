@@ -145,6 +145,50 @@ input[type="range"]:focus-visible {
   display: flex;
 }
 
+/* Loop region bar */
+#loop-bar {
+  background: var(--bg-secondary);
+  border-bottom: 1px solid var(--border);
+  padding: var(--sp-1) var(--sp-4);
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  flex-shrink: 0;
+}
+
+#loop-bar.hidden {
+  display: none;
+}
+
+#loop-bar input[type="text"] {
+  font-family: inherit;
+  font-size: var(--fs-sm);
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  padding: var(--sp-1) var(--sp-2);
+  text-align: center;
+  transition: border-color var(--transition);
+}
+
+#loop-bar input[type="text"]:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+
+#loop-bar input[type="checkbox"] {
+  accent-color: var(--accent);
+  cursor: pointer;
+}
+
+/* Loop button active state */
+#btn-loop[aria-expanded="true"] {
+  background: var(--bg-tertiary);
+  border-color: var(--accent);
+  color: var(--text-primary);
+}
+
 .control-group {
   display: flex;
   align-items: center;
