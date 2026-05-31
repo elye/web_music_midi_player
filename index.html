@@ -162,7 +162,10 @@
   </div>
   <div class="control-group">
     <span class="control-group-label">Count-in</span>
-    <input type="number" id="count-in-input" min="0" max="8" value="0" aria-label="Count-in beats" style="width: 50px;">
+    <div style="display:inline-flex;align-items:center;gap:4px;">
+      <input type="number" id="count-in-input" min="0" max="8" value="0" aria-label="Count-in beats" style="width: 50px;">
+      <span style="font-size:var(--fs-sm);color:var(--text-muted);">⏳</span>
+    </div>
   </div>
   <button id="btn-loop-reset" class="secondary" type="button" aria-label="Reset loop to full song">Reset</button>
 </div>
