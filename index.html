@@ -161,7 +161,20 @@
 
   <div class="separator"></div>
 
-  <!-- Seek -->
+  <!-- Tracks toggle -->
+  <button id="btn-toggle-tracks" class="secondary" aria-label="Show track list" title="Show track list" aria-pressed="false" disabled>
+    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <line x1="8" y1="6" x2="21" y2="6"></line>
+      <line x1="8" y1="12" x2="21" y2="12"></line>
+      <line x1="8" y1="18" x2="21" y2="18"></line>
+      <line x1="3" y1="6" x2="3.01" y2="6"></line>
+      <line x1="3" y1="12" x2="3.01" y2="12"></line>
+      <line x1="3" y1="18" x2="3.01" y2="18"></line>
+    </svg>
+    Tracks
+  </button>
+
+  <div class="separator"></div>
   <div class="control-group">
     <span class="control-group-label">Seek</span>
     <label style="display:inline-flex;align-items:center;gap:var(--sp-2);font-size:var(--fs-sm);color:var(--text-muted);cursor:pointer;" for="waterfall-invert-toggle">
@@ -242,6 +255,18 @@
       <span id="sound-volume-value">-11 dB</span>
     </div>
   </div>
+</div>
+
+<!-- Track selection panel (collapsible) -->
+<div id="track-panel-wrap" class="hidden">
+  <div id="track-panel-header">
+    <span class="control-group-label" style="margin:0;">Tracks</span>
+    <span id="track-panel-buttons">
+      <button id="btn-track-all" class="secondary" type="button">All</button>
+      <button id="btn-track-none" class="secondary" type="button">None</button>
+    </span>
+  </div>
+  <div id="track-list"></div>
 </div>
 
 <!-- Seek bar -->

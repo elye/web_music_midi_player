@@ -18,6 +18,9 @@ class StateStore {
     this.isPlaying = false;
     this.countingIn = false;
 
+    // Per-track muting
+    this.mutedTracks = new Set();  // Set of track indices that are muted
+
     // Modifications
     this.transpose = 0;
 

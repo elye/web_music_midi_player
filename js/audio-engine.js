@@ -225,6 +225,7 @@ export function schedulePart() {
   const autoMode = state.soundMode === 'auto';
 
   const events = state.notes
+    .filter(n => !state.mutedTracks.has(n.trackIndex))
     .map(n => ({
       timeTicks: Math.round(n.time * ticksPerSecond),
       midi: n.isDrum ? n.midi : n.midi + transpose,
