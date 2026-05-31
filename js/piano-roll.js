@@ -65,6 +65,7 @@ export function renderPianoRoll(canvas, container, currentTime) {
   // Notes
   const transpose = state.transpose;
   for (const note of state.notes) {
+    if (state.hiddenTracks.has(note.trackIndex)) continue;
     const noteEnd = note.time + note.duration;
     if (noteEnd < timeLeft || note.time > timeRight) continue;
 

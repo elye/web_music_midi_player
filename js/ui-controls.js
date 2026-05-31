@@ -519,6 +519,7 @@ export function resetRuntimeControlsForNewFile(dom) {
 
   // Reset muted tracks
   state.mutedTracks.clear();
+  state.hiddenTracks.clear();
 }
 
 /* ----------------------------------------------------------
@@ -540,22 +541,48 @@ function populateTrackList(dom) {
 
   dom.btnToggleTracks.disabled = false;
 
+  // Header row with column labels
+  const header = document.createElement('div');
+  header.className = 'track-row track-row-header';
+  header.innerHTML = '<span class="track-col-play">Play</span>' +
+    '<span class="track-col-show">Show</span>';
+  list.appendChild(header);
+
   for (const track of state.tracks) {
     const row = document.createElement('label');
     row.className = 'track-row';
 
-    const cb = document.createElement('input');
-    cb.type = 'checkbox';
-    cb.checked = !state.mutedTracks.has(track.index);
-    cb.dataset.trackIndex = track.index;
+    // Play checkbox (audio mute)
+    const cbPlay = document.createElement('input');
+    cbPlay.type = 'checkbox';
+    cbPlay.checked = !state.mutedTracks.has(track.index);
+    cbPlay.dataset.trackIndex = track.index;
+    cbPlay.dataset.role = 'play';
+    cbPlay.title = 'Toggle audio';
 
-    cb.addEventListener('change', () => {
-      if (cb.checked) {
+    cbPlay.addEventListener('change', () => {
+      if (cbPlay.checked) {
         state.mutedTracks.delete(track.index);
       } else {
         state.mutedTracks.add(track.index);
       }
       rescheduleIfPlaying();
+    });
+
+    // Show checkbox (visual hide)
+    const cbShow = document.createElement('input');
+    cbShow.type = 'checkbox';
+    cbShow.checked = !state.hiddenTracks.has(track.index);
+    cbShow.dataset.trackIndex = track.index;
+    cbShow.dataset.role = 'show';
+    cbShow.title = 'Toggle visual display';
+
+    cbShow.addEventListener('change', () => {
+      if (cbShow.checked) {
+        state.hiddenTracks.delete(track.index);
+      } else {
+        state.hiddenTracks.add(track.index);
+      }
     });
 
     const nameSpan = document.createElement('span');
@@ -566,7 +593,8 @@ function populateTrackList(dom) {
     instSpan.className = 'track-instrument';
     instSpan.textContent = track.instrumentName || '';
 
-    row.appendChild(cb);
+    row.appendChild(cbPlay);
+    row.appendChild(cbShow);
     row.appendChild(nameSpan);
     row.appendChild(instSpan);
 
@@ -595,9 +623,11 @@ function rescheduleIfPlaying() {
 /** Set all track checkboxes to a given state */
 function setAllTracks(dom, audible) {
   state.mutedTracks.clear();
+  state.hiddenTracks.clear();
   if (!audible) {
     for (const track of state.tracks) {
       state.mutedTracks.add(track.index);
+      state.hiddenTracks.add(track.index);
     }
   }
   const checkboxes = dom.trackList.querySelectorAll('input[type="checkbox"]');

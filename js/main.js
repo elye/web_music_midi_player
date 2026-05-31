@@ -96,7 +96,7 @@ function renderLoop() {
   state.activeNotes.clear();
   const transpose = state.transpose;
   for (const note of state.notes) {
-    if (state.mutedTracks.has(note.trackIndex)) continue;
+    if (state.hiddenTracks.has(note.trackIndex)) continue;
     if (note.time <= currentTime && note.time + note.duration > currentTime) {
       const transposed = note.midi + transpose;
       if (transposed >= MIDI_NOTE_MIN && transposed <= MIDI_NOTE_MAX) {

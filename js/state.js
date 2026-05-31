@@ -20,6 +20,7 @@ class StateStore {
 
     // Per-track muting
     this.mutedTracks = new Set();  // Set of track indices that are muted
+    this.hiddenTracks = new Set(); // Set of track indices hidden from visualizers
 
     // Modifications
     this.transpose = 0;

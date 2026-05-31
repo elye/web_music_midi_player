@@ -243,9 +243,10 @@ input[type="range"]:focus-visible {
 #track-list::-webkit-scrollbar-track { background: transparent; }
 
 .track-row {
-  display: flex;
+  display: grid;
+  grid-template-columns: 32px 32px 1fr auto auto;
   align-items: center;
-  gap: var(--sp-2);
+  gap: var(--sp-1);
   padding: var(--sp-1) var(--sp-2);
   border-radius: var(--r-md);
   font-size: var(--fs-sm);
@@ -254,14 +255,38 @@ input[type="range"]:focus-visible {
   user-select: none;
 }
 
-.track-row:hover {
+.track-row:hover:not(.track-row-header) {
   background: var(--bg-tertiary);
+}
+
+.track-row-header {
+  cursor: default;
+  font-size: var(--fs-xs);
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding-bottom: 0;
+}
+
+.track-row-header .track-name,
+.track-row-header .track-instrument {
+  font-weight: 400;
+  font-size: var(--fs-xs);
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.track-col-play,
+.track-col-show {
+  text-align: center;
 }
 
 .track-row input[type="checkbox"] {
   accent-color: var(--accent);
   cursor: pointer;
   flex-shrink: 0;
+  justify-self: center;
 }
 
 .track-row .track-name {
