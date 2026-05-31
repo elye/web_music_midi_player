@@ -9,11 +9,11 @@ import { BPM_DEBOUNCE_MS } from './constants.js';
 import {
   startPlayback, pausePlayback, stopPlayback, seekTo,
   schedulePart, performCountIn, ensureAudioContext,
-  transportToMidiTime, updateSynthSettings,
+  transportToMidiTime, updateSynthSettings, setSoundMode,
 } from './audio-engine.js';
 import { exportMidi, parseMidiFile } from './midi-loader.js';
 import { buildPiano, scrollPianoToActiveRange } from './piano-keyboard.js';
-import { createSynth } from './audio-engine.js';
+import { createSynth, createAutoSynths } from './audio-engine.js';
 import { drawSeekDensity, initSeekInteraction } from './seek-bar.js';
 
 const SOUND_PRESETS = {
@@ -69,6 +69,10 @@ export function initControls(dom) {
   setSoundPanelExpanded(dom, false);
   syncSoundControls(dom);
 
+  // Default to auto mode — preset & advanced controls disabled until Custom is selected
+  dom.soundPreset.disabled = true;
+  dom.btnSoundAdvanced.disabled = true;
+
   dom.soundPreset.addEventListener('change', (e) => {
     const preset = SOUND_PRESETS[e.target.value];
     if (preset) {
@@ -76,6 +80,20 @@ export function initControls(dom) {
       syncSoundControls(dom);
     }
   });
+
+  // ---- Sound Mode toggle (Auto / Custom) ----
+  if (dom.soundModeSelect) {
+    dom.soundModeSelect.addEventListener('change', (e) => {
+      const mode = e.target.value;
+      setSoundMode(mode);
+
+      // Show/hide the preset & advanced controls based on mode
+      const customOnly = mode === 'custom';
+      dom.soundPreset.disabled = !customOnly;
+      dom.btnSoundAdvanced.disabled = !customOnly;
+      if (!customOnly) setSoundPanelExpanded(dom, false);
+    });
+  }
 
   dom.btnSoundAdvanced.addEventListener('click', () => {
     const isExpanded = dom.btnSoundAdvanced.getAttribute('aria-expanded') === 'true';
@@ -479,6 +497,14 @@ export function resetRuntimeControlsForNewFile(dom) {
   state.countingIn = false;
   dom.countInOverlay.classList.add('hidden');
   dom.countInBeat.textContent = '';
+
+  // Reset sound mode to auto for new file
+  state.soundMode = 'auto';
+  if (dom.soundModeSelect) {
+    dom.soundModeSelect.value = 'auto';
+    dom.soundPreset.disabled = true;
+    dom.btnSoundAdvanced.disabled = true;
+  }
 }
 
 /* ----------------------------------------------------------
@@ -518,7 +544,11 @@ async function handleFileLoad(file, dom) {
   dom.visualizers.style.display = 'flex';
 
   // Initialize audio
-  createSynth();
+  if (state.soundMode === 'auto') {
+    createAutoSynths();
+  } else {
+    createSynth();
+  }
 
   // Draw seek density
   drawSeekDensity(dom.seekDensityCanvas, dom.seekContainer);

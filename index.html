@@ -149,10 +149,21 @@
 
   <div class="separator"></div>
 
+  <!-- Sound Mode -->
+  <div class="control-group">
+    <span class="control-group-label">Sound Mode</span>
+    <select id="sound-mode-select" aria-label="Sound mode">
+      <option value="auto" selected>Auto (MIDI instruments)</option>
+      <option value="custom">Custom (single preset)</option>
+    </select>
+  </div>
+
+  <div class="separator"></div>
+
   <!-- Preset Sound -->
   <div class="control-group">
     <span class="control-group-label">Preset</span>
-    <select id="sound-preset" aria-label="Sound preset">
+    <select id="sound-preset" aria-label="Sound preset" disabled>
       <option value="">— Preset —</option>
       <option value="Piano" selected>Piano</option>
       <option value="Organ">Organ</option>

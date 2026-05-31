@@ -54,6 +54,7 @@ const dom = {
   iconFullscreenEnter:  document.getElementById('icon-fullscreen-enter'),
   iconFullscreenExit:   document.getElementById('icon-fullscreen-exit'),
   soundPreset:      document.getElementById('sound-preset'),
+  soundModeSelect:  document.getElementById('sound-mode-select'),
   soundPanel:       document.getElementById('sound-settings-panel'),
   soundOscType:     document.getElementById('sound-osc-type'),
   soundAttack:      document.getElementById('sound-attack'),

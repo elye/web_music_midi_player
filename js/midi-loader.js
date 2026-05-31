@@ -23,12 +23,26 @@ export async function parseMidiFile(file) {
     state.midi = midi;
     state.fileName = file.name.replace(/\.(mid|midi)$/i, '');
 
-    // Extract all notes from all tracks
+    // Build track metadata and extract all notes
     state.notes = [];
+    state.tracks = [];
     let maxTime = 0;
 
-    for (const track of midi.tracks) {
-      const channel = track.channel || 0;
+    midi.tracks.forEach((track, trackIndex) => {
+      const channel = track.channel != null ? track.channel : 0;
+      const isDrum = channel === 9;
+      const instrumentNumber = track.instrument ? track.instrument.number : 0;
+      const instrumentName = track.instrument ? track.instrument.name : '';
+
+      state.tracks.push({
+        index: trackIndex,
+        name: track.name || `Track ${trackIndex + 1}`,
+        instrumentNumber,
+        instrumentName,
+        channel,
+        isDrum,
+      });
+
       for (const note of track.notes) {
         state.notes.push({
           midi: note.midi,
@@ -36,11 +50,15 @@ export async function parseMidiFile(file) {
           duration: note.duration,
           velocity: note.velocity,
           channel,
+          trackIndex,
+          instrumentNumber,
+          instrumentName,
+          isDrum,
         });
         const end = note.time + note.duration;
         if (end > maxTime) maxTime = end;
       }
-    }
+    });
 
     state.notes.sort((a, b) => a.time - b.time);
     state.totalDuration = maxTime;
