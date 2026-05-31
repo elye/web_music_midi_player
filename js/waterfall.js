@@ -53,6 +53,7 @@ export function renderWaterfall(canvas, container, pianoEl, currentTime) {
 
   // Notes
   for (const note of state.notes) {
+    if (state.hiddenTracks.has(note.trackIndex)) continue;
     const noteEnd = note.time + note.duration;
     if (noteEnd < timeBottom - 0.5 || note.time > timeTop) continue;
 

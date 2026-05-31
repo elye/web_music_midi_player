@@ -9,7 +9,8 @@ class StateStore {
     // MIDI data
     this.midi = null;
     this.fileName = '';
-    this.notes = [];              // Flattened, sorted: {midi, time, duration, velocity, channel}
+    this.notes = [];              // Flattened, sorted: {midi, time, duration, velocity, channel, trackIndex, instrumentNumber, instrumentName, isDrum}
+    this.tracks = [];             // Per-track info: [{index, name, instrumentNumber, instrumentName, channel, isDrum}]
     this.totalDuration = 0;
     this.originalBpm = 120;
 
@@ -17,11 +18,20 @@ class StateStore {
     this.isPlaying = false;
     this.countingIn = false;
 
+    // Per-track muting
+    this.mutedTracks = new Set();  // Set of track indices that are muted
+    this.hiddenTracks = new Set(); // Set of track indices hidden from visualizers
+
     // Modifications
     this.transpose = 0;
 
+    // Sound mode: 'auto' uses per-track instruments, 'custom' uses selected preset
+    this.soundMode = 'auto';
+
     // Audio references (managed by AudioEngine)
     this.synth = null;
+    this.synthMap = {};           // family key → PolySynth (auto mode)
+    this.drumSynths = null;       // {kick, snare, hihat, tom, cymbal, other}
     this.part = null;
     this.synthSettings = {
       oscillator: 'sine',

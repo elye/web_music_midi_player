@@ -54,6 +54,7 @@ const dom = {
   iconFullscreenEnter:  document.getElementById('icon-fullscreen-enter'),
   iconFullscreenExit:   document.getElementById('icon-fullscreen-exit'),
   soundPreset:      document.getElementById('sound-preset'),
+  soundModeSelect:  document.getElementById('sound-mode-select'),
   soundPanel:       document.getElementById('sound-settings-panel'),
   soundOscType:     document.getElementById('sound-osc-type'),
   soundAttack:      document.getElementById('sound-attack'),
@@ -69,6 +70,11 @@ const dom = {
   waterfallInvertToggle: document.getElementById('waterfall-invert-toggle'),
   moreBtn:              document.getElementById('more-btn'),
   menuRow2:             document.getElementById('menu-row-2'),
+  trackPanelWrap:       document.getElementById('track-panel-wrap'),
+  btnToggleTracks:      document.getElementById('btn-toggle-tracks'),
+  trackList:            document.getElementById('track-list'),
+  btnTrackAll:          document.getElementById('btn-track-all'),
+  btnTrackNone:         document.getElementById('btn-track-none'),
 };
 
 /* ==========================================================
@@ -90,6 +96,7 @@ function renderLoop() {
   state.activeNotes.clear();
   const transpose = state.transpose;
   for (const note of state.notes) {
+    if (state.hiddenTracks.has(note.trackIndex)) continue;
     if (note.time <= currentTime && note.time + note.duration > currentTime) {
       const transposed = note.midi + transpose;
       if (transposed >= MIDI_NOTE_MIN && transposed <= MIDI_NOTE_MAX) {

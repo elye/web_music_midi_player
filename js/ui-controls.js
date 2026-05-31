@@ -9,11 +9,11 @@ import { BPM_DEBOUNCE_MS } from './constants.js';
 import {
   startPlayback, pausePlayback, stopPlayback, seekTo,
   schedulePart, performCountIn, ensureAudioContext,
-  transportToMidiTime, updateSynthSettings,
+  transportToMidiTime, updateSynthSettings, setSoundMode,
 } from './audio-engine.js';
 import { exportMidi, parseMidiFile } from './midi-loader.js';
 import { buildPiano, scrollPianoToActiveRange } from './piano-keyboard.js';
-import { createSynth } from './audio-engine.js';
+import { createSynth, createAutoSynths } from './audio-engine.js';
 import { drawSeekDensity, initSeekInteraction } from './seek-bar.js';
 
 const SOUND_PRESETS = {
@@ -69,6 +69,10 @@ export function initControls(dom) {
   setSoundPanelExpanded(dom, false);
   syncSoundControls(dom);
 
+  // Default to auto mode — preset & advanced controls disabled until Custom is selected
+  dom.soundPreset.disabled = true;
+  dom.btnSoundAdvanced.disabled = true;
+
   dom.soundPreset.addEventListener('change', (e) => {
     const preset = SOUND_PRESETS[e.target.value];
     if (preset) {
@@ -76,6 +80,20 @@ export function initControls(dom) {
       syncSoundControls(dom);
     }
   });
+
+  // ---- Sound Mode toggle (Auto / Custom) ----
+  if (dom.soundModeSelect) {
+    dom.soundModeSelect.addEventListener('change', (e) => {
+      const mode = e.target.value;
+      setSoundMode(mode);
+
+      // Show/hide the preset & advanced controls based on mode
+      const customOnly = mode === 'custom';
+      dom.soundPreset.disabled = !customOnly;
+      dom.btnSoundAdvanced.disabled = !customOnly;
+      if (!customOnly) setSoundPanelExpanded(dom, false);
+    });
+  }
 
   dom.btnSoundAdvanced.addEventListener('click', () => {
     const isExpanded = dom.btnSoundAdvanced.getAttribute('aria-expanded') === 'true';
@@ -89,6 +107,17 @@ export function initControls(dom) {
     dom.btnTogglePianoRoll.setAttribute('aria-label', isHidden ? 'Show piano roll' : 'Hide piano roll');
     dom.btnTogglePianoRoll.setAttribute('title', isHidden ? 'Show piano roll' : 'Hide piano roll');
   });
+
+  // ---- Track panel toggle ----
+  dom.btnToggleTracks.addEventListener('click', () => {
+    const isHidden = dom.trackPanelWrap.classList.toggle('hidden');
+    dom.btnToggleTracks.setAttribute('aria-pressed', String(!isHidden));
+    dom.btnToggleTracks.setAttribute('aria-label', isHidden ? 'Show track list' : 'Hide track list');
+    dom.btnToggleTracks.setAttribute('title', isHidden ? 'Show track list' : 'Hide track list');
+  });
+
+  dom.btnTrackAll.addEventListener('click', () => setAllTracks(dom, true));
+  dom.btnTrackNone.addEventListener('click', () => setAllTracks(dom, false));
 
   // ---- More button (row 2 toggle) ----
   dom.moreBtn.addEventListener('click', () => {
@@ -479,6 +508,133 @@ export function resetRuntimeControlsForNewFile(dom) {
   state.countingIn = false;
   dom.countInOverlay.classList.add('hidden');
   dom.countInBeat.textContent = '';
+
+  // Reset sound mode to auto for new file
+  state.soundMode = 'auto';
+  if (dom.soundModeSelect) {
+    dom.soundModeSelect.value = 'auto';
+    dom.soundPreset.disabled = true;
+    dom.btnSoundAdvanced.disabled = true;
+  }
+
+  // Reset muted tracks
+  state.mutedTracks.clear();
+  state.hiddenTracks.clear();
+}
+
+/* ----------------------------------------------------------
+   Track list UI
+   ---------------------------------------------------------- */
+
+/** Populate the track list from state.tracks */
+function populateTrackList(dom) {
+  const list = dom.trackList;
+  list.innerHTML = '';
+
+  // Only show track panel when there are multiple tracks
+  if (state.tracks.length <= 1) {
+    dom.trackPanelWrap.classList.add('hidden');
+    dom.btnToggleTracks.disabled = true;
+    dom.btnToggleTracks.setAttribute('aria-pressed', 'false');
+    return;
+  }
+
+  dom.btnToggleTracks.disabled = false;
+
+  // Header row with column labels
+  const header = document.createElement('div');
+  header.className = 'track-row track-row-header';
+  header.innerHTML = '<span class="track-col-play">Play</span>' +
+    '<span class="track-col-show">Show</span>';
+  list.appendChild(header);
+
+  for (const track of state.tracks) {
+    const row = document.createElement('label');
+    row.className = 'track-row';
+
+    // Play checkbox (audio mute)
+    const cbPlay = document.createElement('input');
+    cbPlay.type = 'checkbox';
+    cbPlay.checked = !state.mutedTracks.has(track.index);
+    cbPlay.dataset.trackIndex = track.index;
+    cbPlay.dataset.role = 'play';
+    cbPlay.title = 'Toggle audio';
+
+    cbPlay.addEventListener('change', () => {
+      if (cbPlay.checked) {
+        state.mutedTracks.delete(track.index);
+      } else {
+        state.mutedTracks.add(track.index);
+      }
+      rescheduleIfPlaying();
+    });
+
+    // Show checkbox (visual hide)
+    const cbShow = document.createElement('input');
+    cbShow.type = 'checkbox';
+    cbShow.checked = !state.hiddenTracks.has(track.index);
+    cbShow.dataset.trackIndex = track.index;
+    cbShow.dataset.role = 'show';
+    cbShow.title = 'Toggle visual display';
+
+    cbShow.addEventListener('change', () => {
+      if (cbShow.checked) {
+        state.hiddenTracks.delete(track.index);
+      } else {
+        state.hiddenTracks.add(track.index);
+      }
+    });
+
+    const nameSpan = document.createElement('span');
+    nameSpan.className = 'track-name';
+    nameSpan.textContent = track.name || `Track ${track.index + 1}`;
+
+    const instSpan = document.createElement('span');
+    instSpan.className = 'track-instrument';
+    instSpan.textContent = track.instrumentName || '';
+
+    row.appendChild(cbPlay);
+    row.appendChild(cbShow);
+    row.appendChild(nameSpan);
+    row.appendChild(instSpan);
+
+    if (track.isDrum) {
+      const badge = document.createElement('span');
+      badge.className = 'track-drum-badge';
+      badge.textContent = 'Drums';
+      row.appendChild(badge);
+    }
+
+    list.appendChild(row);
+  }
+}
+
+/** Reschedule audio part while preserving playback position */
+function rescheduleIfPlaying() {
+  if (!state.isPlaying) return;
+  const currentSeconds = Tone.Transport.seconds;
+  Tone.Transport.pause();
+  if (state.part) { state.part.dispose(); state.part = null; }
+  schedulePart();
+  Tone.Transport.seconds = currentSeconds;
+  Tone.Transport.start();
+}
+
+/** Set all track checkboxes to a given state */
+function setAllTracks(dom, audible) {
+  state.mutedTracks.clear();
+  state.hiddenTracks.clear();
+  if (!audible) {
+    for (const track of state.tracks) {
+      state.mutedTracks.add(track.index);
+      state.hiddenTracks.add(track.index);
+    }
+  }
+  const checkboxes = dom.trackList.querySelectorAll('input[type="checkbox"]');
+  for (const cb of checkboxes) {
+    cb.checked = audible;
+  }
+  rescheduleIfPlaying();
 }
 
 /* ----------------------------------------------------------
@@ -518,13 +674,20 @@ async function handleFileLoad(file, dom) {
   dom.visualizers.style.display = 'flex';
 
   // Initialize audio
-  createSynth();
+  if (state.soundMode === 'auto') {
+    createAutoSynths();
+  } else {
+    createSynth();
+  }
 
   // Draw seek density
   drawSeekDensity(dom.seekDensityCanvas, dom.seekContainer);
 
   // Center piano
   scrollPianoToActiveRange(dom.pianoContainer);
+
+  // Populate track list
+  populateTrackList(dom);
 
   // Signal that a file was loaded
   state.emit('file-loaded');
