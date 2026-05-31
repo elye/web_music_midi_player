@@ -73,6 +73,13 @@ export function initControls(dom) {
   dom.soundPreset.disabled = true;
   dom.btnSoundAdvanced.disabled = true;
 
+  // Clamp count-in input to 0–8
+  dom.countInInput.addEventListener('change', () => {
+    let val = parseInt(dom.countInInput.value) || 0;
+    val = clamp(val, 0, 8);
+    dom.countInInput.value = val;
+  });
+
   dom.soundPreset.addEventListener('change', (e) => {
     const preset = SOUND_PRESETS[e.target.value];
     if (preset) {
