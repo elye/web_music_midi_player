@@ -72,7 +72,7 @@ export async function parseMidiFile(file) {
     const bpm = midi.header.tempos.length > 0 ? Math.round(midi.header.tempos[0].bpm) : 120;
     state.originalBpm = clamp(bpm, 20, 300);
 
-    showToast(`Loaded "${file.name}" — ${state.notes.length} notes`, 'success');
+    showToast(`Loaded "${file.name}" — ${state.notes.length} notes, ${state.tracks.length} track${state.tracks.length !== 1 ? 's' : ''}`, 'success');
     return true;
   } catch (e) {
     console.error(e);
@@ -89,9 +89,14 @@ export async function exportMidi(currentBpm, customFileName) {
     const cloned = new Midi(state.midi.toArray());
     const transpose = state.transpose;
 
-    for (const track of cloned.tracks) {
-      for (const note of track.notes) {
-        note.midi = clamp(note.midi + transpose, 0, 127);
+    // Remove muted tracks' notes (export only selected/audible tracks)
+    for (let i = cloned.tracks.length - 1; i >= 0; i--) {
+      if (state.mutedTracks.has(i)) {
+        cloned.tracks.splice(i, 1);
+      } else {
+        for (const note of cloned.tracks[i].notes) {
+          note.midi = clamp(note.midi + transpose, 0, 127);
+        }
       }
     }
 
@@ -125,7 +130,9 @@ export async function exportMidi(currentBpm, customFileName) {
       URL.revokeObjectURL(url);
     }
 
-    showToast('MIDI exported successfully!', 'success');
+    const exportedTracks = cloned.tracks.length;
+    const exportedNotes = cloned.tracks.reduce((sum, t) => sum + t.notes.length, 0);
+    showToast(`Exported ${exportedNotes} notes, ${exportedTracks} track${exportedTracks !== 1 ? 's' : ''}`, 'success');
   } catch (e) {
     if (e.name === 'AbortError') return; // User cancelled the picker — do nothing
     console.error(e);
