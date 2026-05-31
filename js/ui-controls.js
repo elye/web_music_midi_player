@@ -287,6 +287,7 @@ export function initControls(dom) {
       clearTimeout(state.bpmDebounceTimer);
       state.bpmDebounceTimer = setTimeout(() => {
         Tone.Transport.bpm.value = raw;
+        rescheduleIfPlaying();
       }, BPM_DEBOUNCE_MS);
     }
   });
@@ -297,6 +298,7 @@ export function initControls(dom) {
     dom.bpmSlider.value = bpm;
     clearTimeout(state.bpmDebounceTimer);
     Tone.Transport.bpm.value = bpm;
+    rescheduleIfPlaying();
   });
 
   dom.bpmSlider.addEventListener('input', (e) => {
@@ -306,6 +308,7 @@ export function initControls(dom) {
     clearTimeout(state.bpmDebounceTimer);
     state.bpmDebounceTimer = setTimeout(() => {
       Tone.Transport.bpm.value = bpm;
+      rescheduleIfPlaying();
     }, BPM_DEBOUNCE_MS);
   });
 
