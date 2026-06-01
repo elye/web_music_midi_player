@@ -8,7 +8,7 @@ import { initToast } from './toast.js';
 import { buildPiano, updatePianoHighlights } from './piano-keyboard.js';
 import { renderPianoRoll } from './piano-roll.js';
 import { renderWaterfall, initWaterfallSeek, setWaterfallSeekInverted } from './waterfall.js';
-import { drawSeekDensity } from './seek-bar.js';
+import { drawSeekDensity, updateLoopMarkers } from './seek-bar.js';
 import { transportToMidiTime, stopPlayback, seekTo, pausePlayback, startPlayback, performCountIn } from './audio-engine.js';
 import { initControls } from './ui-controls.js';
 import { MIDI_NOTE_MIN, MIDI_NOTE_MAX } from './constants.js';
@@ -35,6 +35,8 @@ const dom = {
   seekContainer:    document.getElementById('seek-bar-container'),
   seekDensityCanvas:document.getElementById('seek-density-canvas'),
   seekProgress:     document.getElementById('seek-progress'),
+  loopMarkerStart:  document.getElementById('loop-marker-start'),
+  loopMarkerEnd:    document.getElementById('loop-marker-end'),
   emptyState:       document.getElementById('empty-state'),
   loadingOverlay:   document.getElementById('loading-overlay'),
   visualizers:      document.getElementById('visualizers'),
@@ -97,6 +99,9 @@ function renderLoop() {
     const pct = clamp(currentTime / state.totalDuration, 0, 1) * 100;
     dom.seekProgress.style.width = pct + '%';
   }
+
+  // Loop markers (visible only when paused & loop bar open)
+  updateLoopMarkers(dom);
 
   // Compute active notes
   state.activeNotes.clear();

@@ -14,7 +14,7 @@ import {
 import { exportMidi, parseMidiFile } from './midi-loader.js';
 import { buildPiano, scrollPianoToActiveRange } from './piano-keyboard.js';
 import { createSynth, createAutoSynths } from './audio-engine.js';
-import { drawSeekDensity, initSeekInteraction } from './seek-bar.js';
+import { drawSeekDensity, initSeekInteraction, initLoopMarkerDrag, updateLoopMarkers } from './seek-bar.js';
 
 const SOUND_PRESETS = {
   Piano:   { oscillator: 'triangle', attack: 0.001, decay: 1.5,  sustain: 0,    release: 1.2,  volume: -6  },
@@ -451,6 +451,7 @@ export function initControls(dom) {
 
   // ---- Seek bar ----
   initSeekInteraction(dom.seekContainer);
+  initLoopMarkerDrag(dom);
 
   // ---- Keyboard shortcuts ----
   document.addEventListener('keydown', (e) => {
@@ -552,6 +553,7 @@ export function initControls(dom) {
 /** Redraw the seek bar to reflect loop region changes */
 function redrawSeekBar(dom) {
   drawSeekDensity(dom.seekDensityCanvas, dom.seekContainer);
+  updateLoopMarkers(dom);
 }
 
 /**
