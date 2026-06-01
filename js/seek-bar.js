@@ -3,7 +3,7 @@
    ========================================================== */
 
 import state from './state.js';
-import { clamp } from './utils.js';
+import { clamp, formatTimeMMSS } from './utils.js';
 import { seekTo } from './audio-engine.js';
 
 /**
@@ -43,6 +43,35 @@ export function drawSeekDensity(canvas, containerEl) {
     const h = (density[i] / maxDensity) * rect.height;
     ctx.fillRect(i * barW, rect.height - h, barW, h);
   }
+
+  // Draw loop region overlay
+  drawLoopRegion(ctx, rect.width, rect.height);
+}
+
+/**
+ * Draw loop region markers on the seek bar.
+ */
+function drawLoopRegion(ctx, w, h) {
+  if (state.totalDuration <= 0) return;
+  const loopStart = state.loopStart;
+  const loopEnd = state.loopEnd != null ? state.loopEnd : state.totalDuration;
+
+  // Only draw if region differs from full song
+  const isCustom = loopStart > 0.5 || (state.loopEnd != null && loopEnd < state.totalDuration - 0.5);
+  if (!isCustom) return;
+
+  const x1 = (loopStart / state.totalDuration) * w;
+  const x2 = (loopEnd / state.totalDuration) * w;
+
+  // Dim areas outside the region
+  ctx.fillStyle = 'rgba(0, 0, 0, 0.3)';
+  if (x1 > 0) ctx.fillRect(0, 0, x1, h);
+  if (x2 < w) ctx.fillRect(x2, 0, w - x2, h);
+
+  // Marker lines at start/end
+  ctx.fillStyle = state.loopEnabled ? 'rgba(76, 201, 240, 0.7)' : 'rgba(180, 180, 200, 0.5)';
+  ctx.fillRect(x1, 0, 2, h);
+  ctx.fillRect(x2 - 2, 0, 2, h);
 }
 
 /**
@@ -95,4 +124,107 @@ export function initSeekInteraction(containerEl) {
   containerEl.addEventListener('touchend', () => {
     isSeeking = false;
   });
+}
+
+/* ==========================================================
+   LOOP MARKERS — Draggable start/end handles on the seek bar
+   ========================================================== */
+
+/**
+ * Wire up drag interaction for the loop start/end markers.
+ * Markers are only draggable when playback is stopped/paused.
+ */
+export function initLoopMarkerDrag(dom) {
+  setupMarkerDrag(dom.loopMarkerStart, 'start', dom);
+  setupMarkerDrag(dom.loopMarkerEnd, 'end', dom);
+}
+
+function setupMarkerDrag(markerEl, type, dom) {
+  let isDragging = false;
+  const tooltip = markerEl.querySelector('.loop-marker-tooltip');
+
+  function startDrag(e) {
+    if (state.isPlaying) return;          // allow seek to handle it
+    if (state.totalDuration <= 0) return;
+    isDragging = true;
+    markerEl.classList.add('dragging');
+    e.stopPropagation();
+    e.preventDefault();
+  }
+
+  function moveDrag(clientX) {
+    if (!isDragging) return;
+    const rect = dom.seekContainer.getBoundingClientRect();
+    const ratio = clamp((clientX - rect.left) / rect.width, 0, 1);
+    const time = ratio * state.totalDuration;
+
+    if (type === 'start') {
+      const maxTime = (state.loopEnd != null ? state.loopEnd : state.totalDuration) - 1;
+      const clamped = clamp(time, 0, Math.max(0, maxTime));
+      state.loopStart = clamped;
+      dom.loopStartInput.value = formatTimeMMSS(clamped);
+    } else {
+      const minTime = state.loopStart + 1;
+      const clamped = clamp(time, minTime, state.totalDuration);
+      if (Math.abs(clamped - state.totalDuration) < 0.5) {
+        state.loopEnd = null;
+      } else {
+        state.loopEnd = clamped;
+      }
+      dom.loopEndInput.value = formatTimeMMSS(
+        state.loopEnd != null ? state.loopEnd : state.totalDuration
+      );
+    }
+
+    const displayTime = type === 'start'
+      ? state.loopStart
+      : (state.loopEnd != null ? state.loopEnd : state.totalDuration);
+    tooltip.textContent = formatTimeMMSS(displayTime);
+
+    drawSeekDensity(dom.seekDensityCanvas, dom.seekContainer);
+    updateLoopMarkers(dom);
+  }
+
+  function endDrag() {
+    if (!isDragging) return;
+    isDragging = false;
+    markerEl.classList.remove('dragging');
+  }
+
+  // Mouse events
+  markerEl.addEventListener('mousedown', startDrag);
+  window.addEventListener('mousemove', (e) => { if (isDragging) moveDrag(e.clientX); });
+  window.addEventListener('mouseup', endDrag);
+
+  // Touch events
+  markerEl.addEventListener('touchstart', startDrag, { passive: false });
+  window.addEventListener('touchmove', (e) => {
+    if (isDragging) {
+      moveDrag(e.touches[0].clientX);
+      e.preventDefault();
+    }
+  }, { passive: false });
+  window.addEventListener('touchend', endDrag);
+  window.addEventListener('touchcancel', endDrag);
+}
+
+/**
+ * Show/hide and position the loop markers based on current state.
+ * Call from the render loop to keep markers in sync.
+ */
+export function updateLoopMarkers(dom) {
+  const loopBarVisible = !dom.loopBar.classList.contains('hidden');
+  const showMarkers = loopBarVisible && !state.isPlaying && state.totalDuration > 0;
+
+  dom.loopMarkerStart.classList.toggle('visible', showMarkers);
+  dom.loopMarkerEnd.classList.toggle('visible', showMarkers);
+
+  if (!showMarkers) return;
+
+  const startPct = (state.loopStart / state.totalDuration) * 100;
+  const endTime = state.loopEnd != null ? state.loopEnd : state.totalDuration;
+  const endPct = (endTime / state.totalDuration) * 100;
+
+  dom.loopMarkerStart.style.left = startPct + '%';
+  dom.loopMarkerEnd.style.left = endPct + '%';
 }

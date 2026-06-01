@@ -56,6 +56,19 @@ function makeDom() {
   const moreBtn = document.createElement('button');
   moreBtn.setAttribute('aria-expanded', 'false');
   const menuRow2 = document.createElement('div');
+  const btnLoop = document.createElement('button');
+  btnLoop.setAttribute('aria-expanded', 'false');
+  const loopBar = document.createElement('div');
+  loopBar.classList.add('hidden');
+  const loopStartInput = document.createElement('input');
+  loopStartInput.type = 'text';
+  loopStartInput.value = '00:00';
+  const loopEndInput = document.createElement('input');
+  loopEndInput.type = 'text';
+  loopEndInput.value = '00:00';
+  const loopEnabledCheckbox = document.createElement('input');
+  loopEnabledCheckbox.type = 'checkbox';
+  const btnLoopReset = document.createElement('button');
 
   return {
     btnLoad,
@@ -104,6 +117,12 @@ function makeDom() {
     iconFullscreenExit,
     moreBtn,
     menuRow2,
+    btnLoop,
+    loopBar,
+    loopStartInput,
+    loopEndInput,
+    loopEnabledCheckbox,
+    btnLoopReset,
   };
 }
 

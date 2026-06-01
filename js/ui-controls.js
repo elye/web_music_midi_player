@@ -3,7 +3,7 @@
    ========================================================== */
 
 import state from './state.js';
-import { clamp, formatTime } from './utils.js';
+import { clamp, formatTime, formatTimeMMSS, parseTimeMMSS } from './utils.js';
 import { showToast } from './toast.js';
 import { BPM_DEBOUNCE_MS } from './constants.js';
 import {
@@ -14,7 +14,7 @@ import {
 import { exportMidi, parseMidiFile } from './midi-loader.js';
 import { buildPiano, scrollPianoToActiveRange } from './piano-keyboard.js';
 import { createSynth, createAutoSynths } from './audio-engine.js';
-import { drawSeekDensity, initSeekInteraction } from './seek-bar.js';
+import { drawSeekDensity, initSeekInteraction, initLoopMarkerDrag, updateLoopMarkers } from './seek-bar.js';
 
 const SOUND_PRESETS = {
   Piano:   { oscillator: 'triangle', attack: 0.001, decay: 1.5,  sustain: 0,    release: 1.2,  volume: -6  },
@@ -73,6 +73,13 @@ export function initControls(dom) {
   dom.soundPreset.disabled = true;
   dom.btnSoundAdvanced.disabled = true;
 
+  // Clamp count-in input to 0–8
+  dom.countInInput.addEventListener('change', () => {
+    let val = parseInt(dom.countInInput.value) || 0;
+    val = clamp(val, 0, 8);
+    dom.countInInput.value = val;
+  });
+
   dom.soundPreset.addEventListener('change', (e) => {
     const preset = SOUND_PRESETS[e.target.value];
     if (preset) {
@@ -124,6 +131,56 @@ export function initControls(dom) {
     const isOpen = dom.menuRow2.classList.toggle('open');
     dom.moreBtn.setAttribute('aria-expanded', String(isOpen));
     dom.moreBtn.textContent = isOpen ? '\u25b2 Less' : '\u25bc More';
+  });
+
+  // ---- Loop button & loop bar ----
+  dom.btnLoop.addEventListener('click', () => {
+    const isOpen = dom.loopBar.classList.toggle('hidden');
+    dom.btnLoop.setAttribute('aria-expanded', String(!isOpen));
+  });
+
+  dom.loopEnabledCheckbox.addEventListener('change', (e) => {
+    state.loopEnabled = e.target.checked;
+    redrawSeekBar(dom);
+  });
+
+  dom.loopStartInput.addEventListener('change', () => {
+    const seconds = parseTimeMMSS(dom.loopStartInput.value);
+    if (isNaN(seconds)) {
+      dom.loopStartInput.value = formatTimeMMSS(state.loopStart);
+      return;
+    }
+    const clamped = clamp(seconds, 0, (state.loopEnd != null ? state.loopEnd : state.totalDuration) - 1);
+    state.loopStart = clamped;
+    dom.loopStartInput.value = formatTimeMMSS(clamped);
+    redrawSeekBar(dom);
+  });
+
+  dom.loopEndInput.addEventListener('change', () => {
+    const seconds = parseTimeMMSS(dom.loopEndInput.value);
+    if (isNaN(seconds)) {
+      dom.loopEndInput.value = formatTimeMMSS(state.loopEnd != null ? state.loopEnd : state.totalDuration);
+      return;
+    }
+    const clamped = clamp(seconds, state.loopStart + 1, state.totalDuration);
+    // If clamped equals totalDuration, treat as "no custom end"
+    if (Math.abs(clamped - state.totalDuration) < 0.5) {
+      state.loopEnd = null;
+    } else {
+      state.loopEnd = clamped;
+    }
+    dom.loopEndInput.value = formatTimeMMSS(state.loopEnd != null ? state.loopEnd : state.totalDuration);
+    redrawSeekBar(dom);
+  });
+
+  dom.btnLoopReset.addEventListener('click', () => {
+    state.loopStart = 0;
+    state.loopEnd = null;
+    state.loopEnabled = false;
+    dom.loopStartInput.value = formatTimeMMSS(0);
+    dom.loopEndInput.value = formatTimeMMSS(state.totalDuration);
+    dom.loopEnabledCheckbox.checked = false;
+    redrawSeekBar(dom);
   });
 
   dom.soundOscType.addEventListener('change', (e) => {
@@ -201,6 +258,12 @@ export function initControls(dom) {
         dom.btnStop.disabled = false;
       }
 
+      // If starting fresh (transport stopped) and a custom loop start is set,
+      // seek to the loop start point before playing
+      if (state.loopStart > 0 && Tone.Transport.state === 'stopped') {
+        seekTo(state.loopStart);
+      }
+
       await startPlayback(dom.audioOverlay);
     }
   });
@@ -224,6 +287,7 @@ export function initControls(dom) {
       clearTimeout(state.bpmDebounceTimer);
       state.bpmDebounceTimer = setTimeout(() => {
         Tone.Transport.bpm.value = raw;
+        rescheduleIfPlaying();
       }, BPM_DEBOUNCE_MS);
     }
   });
@@ -234,6 +298,7 @@ export function initControls(dom) {
     dom.bpmSlider.value = bpm;
     clearTimeout(state.bpmDebounceTimer);
     Tone.Transport.bpm.value = bpm;
+    rescheduleIfPlaying();
   });
 
   dom.bpmSlider.addEventListener('input', (e) => {
@@ -243,6 +308,7 @@ export function initControls(dom) {
     clearTimeout(state.bpmDebounceTimer);
     state.bpmDebounceTimer = setTimeout(() => {
       Tone.Transport.bpm.value = bpm;
+      rescheduleIfPlaying();
     }, BPM_DEBOUNCE_MS);
   });
 
@@ -385,6 +451,7 @@ export function initControls(dom) {
 
   // ---- Seek bar ----
   initSeekInteraction(dom.seekContainer);
+  initLoopMarkerDrag(dom);
 
   // ---- Keyboard shortcuts ----
   document.addEventListener('keydown', (e) => {
@@ -483,6 +550,12 @@ export function initControls(dom) {
   }
 }
 
+/** Redraw the seek bar to reflect loop region changes */
+function redrawSeekBar(dom) {
+  drawSeekDensity(dom.seekDensityCanvas, dom.seekContainer);
+  updateLoopMarkers(dom);
+}
+
 /**
  * Reset BPM and transpose state/UI to defaults.
  * @param {number} newBpm — BPM value to set
@@ -520,6 +593,14 @@ export function resetRuntimeControlsForNewFile(dom) {
   // Reset muted tracks
   state.mutedTracks.clear();
   state.hiddenTracks.clear();
+
+  // Reset loop
+  state.loopStart = 0;
+  state.loopEnd = null;
+  state.loopEnabled = false;
+  dom.loopStartInput.value = formatTimeMMSS(0);
+  dom.loopEndInput.value = formatTimeMMSS(state.totalDuration);
+  dom.loopEnabledCheckbox.checked = false;
 }
 
 /* ----------------------------------------------------------
@@ -668,6 +749,7 @@ async function handleFileLoad(file, dom) {
   dom.btnStop.disabled = false;
   dom.btnRewind.disabled = false;
   dom.btnReset.disabled = false;
+  dom.btnLoop.disabled = false;
 
   // Show visualizers
   dom.emptyState.classList.add('hidden');

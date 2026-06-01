@@ -26,6 +26,21 @@ export function formatTime(seconds) {
   return `${String(mins).padStart(2, '0')}:${String(whole).padStart(2, '0')}.${String(ms).padStart(3, '0')}`;
 }
 
+/** Format seconds to mm:ss display string (no milliseconds) */
+export function formatTimeMMSS(seconds) {
+  if (!isFinite(seconds) || seconds < 0) seconds = 0;
+  const mins = Math.floor(seconds / 60);
+  const secs = Math.floor(seconds % 60);
+  return `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+}
+
+/** Parse an mm:ss string to total seconds. Returns NaN on invalid input. */
+export function parseTimeMMSS(str) {
+  const match = /^(\d{1,3}):([0-5]?\d)$/.exec((str || '').trim());
+  if (!match) return NaN;
+  return parseInt(match[1], 10) * 60 + parseInt(match[2], 10);
+}
+
 /** Clamp a value between lo and hi */
 export function clamp(v, lo, hi) {
   return Math.max(lo, Math.min(hi, v));

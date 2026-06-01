@@ -8,8 +8,8 @@ import { initToast } from './toast.js';
 import { buildPiano, updatePianoHighlights } from './piano-keyboard.js';
 import { renderPianoRoll } from './piano-roll.js';
 import { renderWaterfall, initWaterfallSeek, setWaterfallSeekInverted } from './waterfall.js';
-import { drawSeekDensity } from './seek-bar.js';
-import { transportToMidiTime, stopPlayback } from './audio-engine.js';
+import { drawSeekDensity, updateLoopMarkers } from './seek-bar.js';
+import { transportToMidiTime, stopPlayback, seekTo, pausePlayback, startPlayback, performCountIn } from './audio-engine.js';
 import { initControls } from './ui-controls.js';
 import { MIDI_NOTE_MIN, MIDI_NOTE_MAX } from './constants.js';
 
@@ -35,6 +35,8 @@ const dom = {
   seekContainer:    document.getElementById('seek-bar-container'),
   seekDensityCanvas:document.getElementById('seek-density-canvas'),
   seekProgress:     document.getElementById('seek-progress'),
+  loopMarkerStart:  document.getElementById('loop-marker-start'),
+  loopMarkerEnd:    document.getElementById('loop-marker-end'),
   emptyState:       document.getElementById('empty-state'),
   loadingOverlay:   document.getElementById('loading-overlay'),
   visualizers:      document.getElementById('visualizers'),
@@ -70,6 +72,12 @@ const dom = {
   waterfallInvertToggle: document.getElementById('waterfall-invert-toggle'),
   moreBtn:              document.getElementById('more-btn'),
   menuRow2:             document.getElementById('menu-row-2'),
+  btnLoop:              document.getElementById('btn-loop'),
+  loopBar:              document.getElementById('loop-bar'),
+  loopStartInput:       document.getElementById('loop-start-input'),
+  loopEndInput:         document.getElementById('loop-end-input'),
+  loopEnabledCheckbox:  document.getElementById('loop-enabled-checkbox'),
+  btnLoopReset:         document.getElementById('btn-loop-reset'),
   trackPanelWrap:       document.getElementById('track-panel-wrap'),
   btnToggleTracks:      document.getElementById('btn-toggle-tracks'),
   trackList:            document.getElementById('track-list'),
@@ -92,6 +100,9 @@ function renderLoop() {
     dom.seekProgress.style.width = pct + '%';
   }
 
+  // Loop markers (visible only when paused & loop bar open)
+  updateLoopMarkers(dom);
+
   // Compute active notes
   state.activeNotes.clear();
   const transpose = state.transpose;
@@ -110,9 +121,33 @@ function renderLoop() {
   renderPianoRoll(dom.pianoRollCanvas, dom.pianoRollPanel, currentTime);
   renderWaterfall(dom.waterfallCanvas, dom.waterfallPanel, dom.piano, currentTime);
 
-  // Auto-stop at end
-  if (state.isPlaying && currentTime >= state.totalDuration) {
-    stopPlayback();
+  // Loop / region boundary check
+  const loopBarVisible = !dom.loopBar.classList.contains('hidden');
+  if (state.isPlaying && !state.countingIn) {
+    const loopEnd = (loopBarVisible && state.loopEnd != null) ? state.loopEnd : state.totalDuration;
+    if (currentTime >= loopEnd) {
+      if (loopBarVisible && state.loopEnabled) {
+        const countIn = parseInt(dom.countInInput.value) || 0;
+        if (countIn > 0) {
+          // Pause, count-in, then resume from loop start
+          pausePlayback();
+          seekTo(state.loopStart);
+          state.countingIn = true;
+          performCountIn(countIn, dom.countInOverlay, dom.countInBeat).then(() => {
+            state.countingIn = false;
+            startPlayback(dom.audioOverlay);
+          });
+        } else {
+          seekTo(state.loopStart);
+        }
+      } else if (state.loopEnd != null) {
+        // Custom end point set but loop off — stop
+        stopPlayback();
+      } else {
+        // No custom end, no loop — stop at song end
+        stopPlayback();
+      }
+    }
   }
 
   state.animFrameId = requestAnimationFrame(renderLoop);
